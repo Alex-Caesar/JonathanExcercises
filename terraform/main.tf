@@ -105,7 +105,7 @@ resource "azurerm_network_security_group" "ex1-vm-netsecg" {
   resource_group_name = azurerm_resource_group.ex1.name
 }
 
-
+#  VM HERE
 
 resource "azurerm_redis_cache" "ex1-vm-redis" {
   name                = "${var.rg-name}-redis"
