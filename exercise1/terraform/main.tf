@@ -31,7 +31,9 @@ resource "azurerm_virtual_network" "ex1-vnet" {
   address_space       = ["10.0.0.0/16"]
 }
 
-#----------------------- SQL associated resources -----------------------------------------------
+# ********************** SQL associated resources **************************************************
+
+#----------------------- SQL network resources -----------------------------------------------
 resource "azurerm_subnet" "ex1-subnet-sql" {
   name                 = "${var.rg-name}-subnet-sql"
   resource_group_name  = azurerm_resource_group.ex1.name
@@ -51,7 +53,7 @@ resource "azurerm_subnet_network_security_group_association" "ex1-secg-asso" {
 }
 
 resource "azurerm_private_dns_zone" "ex1-priv-dns-zone" {
-  name                = "${var.rg-name}.private.dns.zone.net"
+  name                = "${var.rg-name}.privatelink.database.windows.net"
   resource_group_name = azurerm_resource_group.ex1.name
 }
 
@@ -69,9 +71,10 @@ resource "azurerm_private_endpoint" "ex1-sqldb-private-end" {
   location            = azurerm_resource_group.ex1.location
 
   subnet_id = azurerm_subnet.ex1-subnet-sql.id
+
   private_service_connection {
     name                           = "${var.rg-name}-private-serv-conn"
-    private_connection_resource_id = azurerm_storage_account.ex1-store-acc.id
+    private_connection_resource_id = azurerm_mssql_database.ex1-sql-db.id
     subresource_names              = ["file", "blob"]
     is_manual_connection           = false
   }
@@ -81,7 +84,7 @@ resource "azurerm_private_endpoint" "ex1-sqldb-private-end" {
     private_dns_zone_ids = [azurerm_private_dns_zone.ex1-priv-dns-zone.id]
   }
 }
-
+#----------------------- SQL Database resources -----------------------------------------------
 resource "azurerm_storage_account" "ex1-store-acc" {
   name                     = "${var.rg-name}-store-acc"
   resource_group_name      = azurerm_resource_group.ex1.name
@@ -95,6 +98,9 @@ resource "azurerm_mssql_server" "ex1-sql-server" {
   resource_group_name = azurerm_resource_group.ex1.name
   location            = azurerm_resource_group.ex1.location
   version             = "12.0"
+
+  administrator_login          = var.db-admin
+  administrator_login_password = var.db-password
 }
 
 resource "azurerm_mssql_database" "ex1-sql-db" {
@@ -128,7 +134,7 @@ resource "azurerm_redis_cache" "ex1-vm-redis" {
   resource_group_name = azurerm_resource_group.ex1.name
   location            = azurerm_resource_group.ex1.location
   capacity            = 1
-  family              = C
+  family              = "C"
   sku_name            = "Basic"
   # todo
 }
@@ -162,8 +168,8 @@ resource "azurerm_key_vault_access_policy" "ex1-akv-acc-pol-tf" {
 
 resource "azurerm_key_vault_secret" "ex1-akv-db-secret" {
   name         = "${var.rg-name}-db-secret"
-  value        = azurerm_cosmosdb_account.ex1-cosmosdb-ac.primary_sql_connection_string
+  value        = azurerm_mssql_server.ex1-sql-server.administrator_login_password
   key_vault_id = azurerm_key_vault.ex1-akv.id
   # to ensure the connection secret string is created after the value is generated
-  depends_on = [azurerm_cosmosdb_account.ex1-cosmosdb-ac]
+  depends_on = [azurerm_storage_account.ex1-store-acc]
 }
