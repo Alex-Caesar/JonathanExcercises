@@ -1,13 +1,13 @@
 variable "rg-name" {
-    type = string
-  default = "Exercise1"
+  type        = string
+  default     = "exercise1"
   description = "The name to give the resource group that will be cat for other resource names."
-  sensitive = false
+  sensitive   = false
 }
 
 variable "rg-location" {
-    type = string
-  default = "westus"
+  type        = string
+  default     = "westus"
   description = "The location of the resource group and subsequent assets or resources."
-  sensitive = false
+  sensitive   = false
 }
