@@ -46,49 +46,65 @@ resource "azurerm_network_security_group" "ex1-sql-netsecg" {
 }
 
 resource "azurerm_subnet_network_security_group_association" "ex1-secg-asso" {
-  subnet_id = azurerm_subnet.ex1-subnet-sql.id
+  subnet_id                 = azurerm_subnet.ex1-subnet-sql.id
   network_security_group_id = azurerm_network_security_group.ex1-sql-netsecg.id
 }
 
-# resource "azurerm_private_endpoint" "ex1-cosmosdb-sqldb-private-end" {
-#   name = "${var.rg-name}-cosmosdb-private-end"
-#   resource_group_name = azurerm_resource_group.ex1.name
-#   location            = azurerm_resource_group.ex1.location
-# subnet_id = azurerm_subnet.ex1-subnet-sql.id
-#  private_service_connection {
-#    # todo
-#  }
-# }
+resource "azurerm_private_dns_zone" "ex1-priv-dns-zone" {
+  name                = "${var.rg-name}.private.dns.zone.net"
+  resource_group_name = azurerm_resource_group.ex1.name
+}
 
-resource "azurerm_cosmosdb_account" "ex1-cosmosdb-ac" {
-  name                = "${var.rg-name}-cosmos-account"
+resource "azurerm_private_dns_zone_virtual_network_link" "ex1-priv-dns-z-net-link" {
+  name                = "${var.rg-name}-priv-dns-z-net-link"
+  resource_group_name = azurerm_resource_group.ex1.name
+
+  private_dns_zone_name = azurerm_private_dns_zone.ex1-priv-dns-zone.name
+  virtual_network_id    = azurerm_virtual_network.ex1-vnet.id
+}
+
+resource "azurerm_private_endpoint" "ex1-sqldb-private-end" {
+  name                = "${var.rg-name}-private-end"
   resource_group_name = azurerm_resource_group.ex1.name
   location            = azurerm_resource_group.ex1.location
-  offer_type          = "Standard"
-  free_tier_enabled   = true
-  consistency_policy {
-    consistency_level = "BoundedStaleness"
+
+  subnet_id = azurerm_subnet.ex1-subnet-sql.id
+  private_service_connection {
+    name                           = "${var.rg-name}-private-serv-conn"
+    private_connection_resource_id = azurerm_storage_account.ex1-store-acc.id
+    subresource_names              = ["file", "blob"]
+    is_manual_connection           = false
   }
-  geo_location {
-    location          = azurerm_resource_group.ex1.location
-    failover_priority = 0
+
+  private_dns_zone_group {
+    name                 = "${var.rg-name}-private-dns-zg"
+    private_dns_zone_ids = [azurerm_private_dns_zone.ex1-priv-dns-zone.id]
   }
 }
 
-resource "azurerm_cosmosdb_sql_database" "ex1-cosmosdb-sqldb" {
-  name                = "${var.rg-name}-cosmosdb-sqldb"
+resource "azurerm_storage_account" "ex1-store-acc" {
+  name                     = "${var.rg-name}-store-acc"
+  resource_group_name      = azurerm_resource_group.ex1.name
+  location                 = azurerm_resource_group.ex1.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+}
+
+resource "azurerm_mssql_server" "ex1-sql-server" {
+  name                = "${var.rg-name}-sql-server"
   resource_group_name = azurerm_resource_group.ex1.name
-  account_name        = azurerm_cosmosdb_account.ex1-cosmosdb-ac.name
+  location            = azurerm_resource_group.ex1.location
+  version             = "12.0"
 }
 
-resource "azurerm_cosmosdb_sql_container" "ex1-cosmosdb-sqlcontainer" {
-  name                  = "${var.rg-name}-cosmosdb-sqlcontainer"
-  resource_group_name   = azurerm_resource_group.ex1.name
-  account_name          = azurerm_cosmosdb_account.ex1-cosmosdb-ac.name
-  database_name         = azurerm_cosmosdb_sql_database.ex1-cosmosdb-sqldb.account_name
-  partition_key_path    = "/definition/id" # todo
-  partition_key_version = 1
-  # todo
+resource "azurerm_mssql_database" "ex1-sql-db" {
+  name      = "${var.rg-name}-sql-db"
+  server_id = azurerm_mssql_server.ex1-sql-server.id
+
+  # prevent the possibility of accidental data loss
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 #--------------------------- VM associated resources ------------------------------
