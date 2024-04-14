@@ -127,6 +127,8 @@ resource "azurerm_network_security_group" "ex1-vm-netsecg" {
   name                = "${var.rg-name}-vm-netsecg"
   location            = azurerm_resource_group.ex1.location
   resource_group_name = azurerm_resource_group.ex1.name
+
+  # did not add rule for 443 traffic yet cause no public ip so unreachable ?
 }
 
 resource "azurerm_network_interface" "ex1-nic-vm" {
@@ -165,6 +167,15 @@ resource "azurerm_virtual_machine" "ex1-vm" {
     admin_password = var.vm-password
     computer_name  = var.vm_name
   }
+
+  storage_image_reference {
+    publisher = "Canonical"
+    offer     = "UbuntuServer"
+    sku       = "18.04-LTS"
+    version   = "latest"
+  }
+
+# todo need an extention to do the startup setup
 
 }
 
