@@ -18,6 +18,16 @@ provider "azurerm" {
 #--------------------------------- Base data -------------------------------------------------------------
 data "azurerm_client_config" "current" {}
 
+locals {
+  backend_address_pool_name      = "${azurerm_virtual_network.ex1-vnet.name}-beap"
+  frontend_port_name             = "${azurerm_virtual_network.ex1-vnet.name}-feport"
+  frontend_ip_configuration_name = "${azurerm_virtual_network.ex1-vnet.name}-feip"
+  http_setting_name              = "${azurerm_virtual_network.ex1-vnet.name}-be-htst"
+  listener_name                  = "${azurerm_virtual_network.ex1-vnet.name}-httplstn"
+  request_routing_rule_name      = "${azurerm_virtual_network.ex1-vnet.name}-rqrt"
+  redirect_configuration_name    = "${azurerm_virtual_network.ex1-vnet.name}-rdrcfg"
+}
+
 #------------------------------ Base resources --------------------------------------------------------
 resource "azurerm_resource_group" "ex1" {
   name     = var.rg-location
@@ -173,6 +183,60 @@ resource "azurerm_network_interface" "ex1-nic-vm" {
     subnet_id                     = azurerm_network_security_group.ex1-vm-netsecg.id
     private_ip_address_allocation = "static"
   }
+}
+
+resource "azurerm_application_gateway" "ex1-app-gw" {
+    name                = "${var.rg-name}-app-gw"
+  resource_group_name = azurerm_resource_group.ex1.name
+  location            = azurerm_resource_group.ex1.location
+
+  sku {
+    name = "Standard_Small"
+    tier = "WAF_v2"
+    capacity = 1
+  }
+
+  gateway_ip_configuration {
+    name = "${var.rg-name}-app-gw-ip-config"
+    subnet_id = azurerm_subnet.ex1-subnet-vm.id
+  }
+
+frontend_ip_configuration {
+  name = local.frontend_ip_configuration_name
+  # No public ip
+}
+  frontend_port {
+        name = local.frontend_ip_configuration_name
+        port = 443
+  }
+
+backend_address_pool {
+  name = local.http_setting_name
+}
+
+backend_http_settings {
+  name = local.http_setting_name
+  cookie_based_affinity = false
+  port = 443
+  protocol = "Https"
+}
+
+http_listener {
+  name = local.listener_name
+  frontend_ip_configuration_name = "${var.rg-name}-app-gw-front-ip-name"
+  frontend_port_name = "${var.rg-name}-app-gw-front-port-name"
+  protocol = "Https"
+}
+
+request_routing_rule {
+    name = local.request_routing_rule_name
+    priority = 6
+    rule_type = "Basic"
+    http_listener_name = local.listener_name
+    backend_address_pool_name = local.backend_address_pool_name
+    backend_http_settings_name = local.http_setting_name
+}
+
 }
 
 #--------------------------- VM associated resources ------------------------------
