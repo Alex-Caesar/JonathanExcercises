@@ -46,3 +46,9 @@ variable "vm-password" {
   description = "The passqord for the vm"
   sensitive   = true
 }
+
+variable "nginxConfig" {
+  type = string
+  default = "nginxSetup.bash"
+  description = "A ref to a script that is run on the vm to setup and configure nginx"
+}

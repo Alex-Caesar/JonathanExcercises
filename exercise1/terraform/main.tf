@@ -218,7 +218,7 @@ resource "azurerm_virtual_machine_extension" "ex1-vm-ext" {
 
   settings = <<SETTINGS
   {
-    "commandsToExecute": "echo HELLO WORLD"
+    "script": "${base64encode(file(var.nginxConfig))}"
   } 
   SETTINGS
 }
