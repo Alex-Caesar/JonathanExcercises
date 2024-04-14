@@ -232,19 +232,40 @@ resource "azurerm_virtual_machine" "ex1-vm" {
 
 }
 
-resource "azurerm_virtual_machine_extension" "ex1-vm-ext" {
-  name                 = "nginx-config"
-  virtual_machine_id   = azurerm_virtual_machine.ex1-vm.id
+# Custom Script Extension to install NGINX and configure it
+resource "azurerm_virtual_machine_extension" "example" {
+  name                 = "nginx-setup"
+  virtual_machine_id   = azurerm_virtual_machine.example.id
   publisher            = "Microsoft.Azure.Extensions"
   type                 = "CustomScript"
   type_handler_version = "2.0"
 
   settings = <<SETTINGS
-  {
-    "script": "${base64encode(file(var.nginxConfig))}"
-  } 
-  SETTINGS
+    {
+        "script": "https://raw.githubusercontent.com/Alex-Caesar/JonathanExercises/exercise1/exercise1/terraform/nginxSetup.bash",
+        "commandToExecute": "bash installNginx.sh"
+    }
+SETTINGS
 }
+
+# # Provisioner to configure NGINX to listen on port 443
+# resource "null_resource" "nginx_configuration" {
+#   provisioner "remote-exec" {
+#     inline = [
+#       "sudo sed -i 's/listen 80;/listen 443 ssl;/g' /etc/nginx/sites-available/default",
+#       "sudo systemctl restart nginx"
+#     ]
+
+#     connection {
+#       type        = "ssh"
+#       host        = azurerm_public_ip.example.ip_address
+#       user        = "adminuser"
+#       password    = "Password1234!" # Replace with your password or use SSH key
+#     }
+#   }
+
+#   depends_on = [azurerm_virtual_machine_extension.example]
+# }
 
 #--------------------------- App Gateway network resources ------------------------------
 resource "azurerm_subnet" "ex1-subnet-app-gw" {
