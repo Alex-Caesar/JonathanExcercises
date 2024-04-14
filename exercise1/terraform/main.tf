@@ -235,7 +235,7 @@ resource "azurerm_virtual_machine" "ex1-vm" {
 # Custom Script Extension to install NGINX and configure it
 resource "azurerm_virtual_machine_extension" "example" {
   name                 = "nginx-setup"
-  virtual_machine_id   = azurerm_virtual_machine.example.id
+  virtual_machine_id   = azurerm_virtual_machine.ex1-vm.id   
   publisher            = "Microsoft.Azure.Extensions"
   type                 = "CustomScript"
   type_handler_version = "2.0"
@@ -328,7 +328,7 @@ resource "azurerm_application_gateway" "ex1-app-gw" {
   }
   backend_address_pool {
     name = local.http_setting_name
-    # ip_addresses = [ azurerm_network_interface.ex1-nic-vm ] # doing this with another resource
+    ip_addresses = [ azurerm_network_interface.ex1-nic-vm ] # doing this with another resource
   }
   backend_http_settings {
     name                  = local.http_setting_name
@@ -364,11 +364,11 @@ resource "azurerm_application_gateway" "ex1-app-gw" {
   depends_on = [azurerm_key_vault.ex1-akv, azurerm_user_assigned_identity.ex1-app-gw-ass-iden, azurerm_key_vault_certificate.ex1-cert-appgw]
 }
 
-resource "azurerm_network_interface_application_gateway_backend_address_pool_association" "ex1-app-gw-nic-asso" {
-  network_interface_id    = azurerm_network_interface.ex1-nic-vm.id
-  ip_configuration_name   = "${var.rg-name}-vm-nic-app-gw-asso"
-  backend_address_pool_id = tolist(azurerm_application_gateway.ex1-app-gw.backend_address_pool).0.id
-}
+# resource "azurerm_network_interface_application_gateway_backend_address_pool_association" "ex1-app-gw-nic-asso" {
+#   network_interface_id    = azurerm_network_interface.ex1-nic-vm.id
+#   ip_configuration_name   = "${var.rg-name}-vm-nic-app-gw-asso"
+#   backend_address_pool_id = azurerm_application_gateway.ex1-app-gw.backend_address_pool.id
+# }
 
 
 #------------------------ AKV associated resources ----------------------------------------------
