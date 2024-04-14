@@ -366,8 +366,8 @@ resource "azurerm_application_gateway" "ex1-app-gw" {
 
 resource "azurerm_network_interface_application_gateway_backend_address_pool_association" "ex1-app-gw-nic-asso" {
   network_interface_id    = azurerm_network_interface.ex1-nic-vm.id
-  ip_configuration_name   = "${var.rg-name}-app-gw-nic-ip-name"
-  backend_address_pool_id = one(azurerm_application_gateway.ex1-app-gw.backend_address_pool).id
+  ip_configuration_name   = "${var.rg-name}-vm-nic-app-gw-asso"
+  backend_address_pool_id = tolist(azurerm_application_gateway.ex1-app-gw.backend_address_pool).0.id
 }
 
 
