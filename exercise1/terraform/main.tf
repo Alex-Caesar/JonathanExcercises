@@ -82,13 +82,13 @@ resource "azurerm_private_endpoint" "ex1-redis-private-end" {
 
   private_service_connection {
     name                           = "${var.rg-name}-redis-private-serv-conn"
-    private_connection_resource_id = azurerm_redis_cache.ex1-vm-redis.id # do not think this is correct
-    # subresource ?
+    private_connection_resource_id = azurerm_redis_cache.ex1-vm-redis.id
+    # subresource_names = [  ] # not sure
     is_manual_connection = false
   }
 
   private_dns_zone_group {
-    name                 = "${var.rg-name}-private-dns-zg"
+    name                 = "${var.rg-name}-private-dns-zg-redis"
     private_dns_zone_ids = [azurerm_private_dns_zone.ex1-priv-dns-zone.id]
   }
 }
@@ -102,13 +102,13 @@ resource "azurerm_private_endpoint" "ex1-sqldb-private-end" {
 
   private_service_connection {
     name                           = "${var.rg-name}-sql-private-serv-conn"
-    private_connection_resource_id = azurerm_mssql_database.ex1-sql-db.id
-    subresource_names              = ["file", "blob"]
+    private_connection_resource_id = azurerm_mssql_server.ex1-sql-server.id
+    subresource_names              = ["sqlServer"]
     is_manual_connection           = false
   }
 
   private_dns_zone_group {
-    name                 = "${var.rg-name}-private-dns-zg"
+    name                 = "${var.rg-name}-private-dns-zg-sql"
     private_dns_zone_ids = [azurerm_private_dns_zone.ex1-priv-dns-zone.id]
   }
 }
