@@ -242,7 +242,7 @@ resource "azurerm_virtual_machine_extension" "example" {
 
   settings = <<SETTINGS
     {
-        "script": "https://raw.githubusercontent.com/Alex-Caesar/JonathanExercises/exercise1/exercise1/terraform/nginxSetup.bash",
+        "script": "https://raw.githubusercontent.com/Alex-Caesar/JonathanExercises/exercise1/exercise1/nginxSetup.bash",
         "commandToExecute": "bash installNginx.sh"
     }
 SETTINGS
