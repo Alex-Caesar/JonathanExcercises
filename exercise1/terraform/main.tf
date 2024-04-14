@@ -322,6 +322,8 @@ resource "azurerm_application_gateway" "ex1-app-gw" {
     backend_http_settings_name = local.http_setting_name
   }
 
+  #ensuring the cert is ready to be utilized
+  depends_on = [azurerm_key_vault.ex1-akv, azurerm_key_vault_access_policy.ex1-akv-acc-pol-app-gw, azurerm_key_vault_certificate.ex1-cert-appgw]
 }
 
 resource "azurerm_network_interface_application_gateway_backend_address_pool_association" "ex1-app-gw-nic-asso" {
@@ -341,10 +343,10 @@ resource "azurerm_key_vault" "ex1-akv" {
 }
 
 
-resource "azurerm_key_vault_access_policy" "ex1-akv-acc-pol-vm" {
+resource "azurerm_key_vault_access_policy" "ex1-akv-acc-pol-app-gw" {
   key_vault_id = azurerm_key_vault.ex1-akv.id
-  tenant_id    = data.azurerm_client_config.current.id
-  object_id    = data.azurerm_client_config.current.object_id # todo: needs to be the security group of the vm
+  tenant_id    = data.azurerm_client_config.current.tenant_id.id
+  object_id    = data.azurerm_client_config.current.object_id # todo: needs to be the security group of the app gw
 
   key_permissions = ["Get", "List"]
 }
@@ -366,3 +368,30 @@ resource "azurerm_key_vault_secret" "ex1-akv-db-secret" {
   depends_on = [azurerm_storage_account.ex1-store-acc]
 }
 
+resource "azurerm_key_vault_certificate" "ex1-cert-appgw" {
+  name         = "${var.rg-name}-cert-appgw"
+  key_vault_id = azurerm_key_vault.ex1-akv.id
+
+  certificate_policy {
+    issuer_parameters {
+      name = "Self"
+    }
+    key_properties {
+      exportable = true
+      key_size   = 2048
+      key_type   = "RSA"
+      reuse_key  = true
+    }
+    lifetime_action {
+      action {
+        action_type = "AutoRenew"
+      }
+      trigger {
+        days_before_expiry = 30
+      }
+    }
+    secret_properties {
+      content_type = "application/x-pkcs12"
+    }
+  }
+}
