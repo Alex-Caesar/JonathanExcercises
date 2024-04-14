@@ -31,7 +31,7 @@ locals {
 
 #------------------------------ Base resources --------------------------------------------------------
 resource "azurerm_resource_group" "ex1" {
-  name     = var.rg-location
+  name     = var.rg-name
   location = var.rg-location
 }
 
@@ -47,7 +47,7 @@ resource "azurerm_subnet" "ex1-subnet-pe" {
   name                 = "${var.rg-name}-subnet-pe"
   resource_group_name  = azurerm_resource_group.ex1.name
   virtual_network_name = azurerm_virtual_network.ex1-vnet.name
-  address_prefixes     = ["10.1.0.0/24"]
+  address_prefixes     = ["10.0.0.0/24"]
 }
 
 resource "azurerm_network_security_group" "ex1-sql-netsecg" {
@@ -118,7 +118,7 @@ resource "azurerm_private_endpoint" "ex1-sqldb-private-end" {
 
 #----------------------- SQL Database resources -----------------------------------------------
 resource "azurerm_storage_account" "ex1-store-acc" {
-  name                     = "${var.rg-name}0store0acc"
+  name                     = "${var.rg-name}9store9acc"
   resource_group_name      = azurerm_resource_group.ex1.name
   location                 = azurerm_resource_group.ex1.location
   account_tier             = "Standard"
@@ -163,7 +163,7 @@ resource "azurerm_subnet" "ex1-subnet-vm" {
   name                 = "${var.rg-name}-subnet-vm"
   resource_group_name  = azurerm_resource_group.ex1.name
   virtual_network_name = azurerm_virtual_network.ex1-vnet.name
-  address_prefixes     = ["10.2.0.0/24"]
+  address_prefixes     = ["10.0.2.0/24"]
 }
 
 resource "azurerm_network_security_group" "ex1-vm-netsecg" {
@@ -272,7 +272,7 @@ resource "azurerm_subnet" "ex1-subnet-app-gw" {
   name                 = "${var.rg-name}-subnet-app-gw"
   resource_group_name  = azurerm_resource_group.ex1.name
   virtual_network_name = azurerm_virtual_network.ex1-vnet.name
-  address_prefixes     = ["10.3.0.0/24"]
+  address_prefixes     = ["10.0.3.0/24"]
 }
 
 resource "azurerm_network_security_group" "ex1-app-gw" {

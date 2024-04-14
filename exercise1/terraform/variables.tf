@@ -14,14 +14,14 @@ variable "rg-location" {
 
 variable "db-admin" {
   type        = string
-  default     = "admin"
+  default     = "dbadmin"
   description = "The username for the msSQL server"
   sensitive   = true
 }
 
 variable "db-password" {
   type        = string
-  default     = "password"
+  default     = "dbpassword"
   description = "The passqord for the msSQL server"
   sensitive   = true
 }
@@ -35,14 +35,14 @@ variable "vm_name" {
 
 variable "vm-admin" {
   type        = string
-  default     = "admin"
+  default     = "vmadmin"
   description = "The username for the vm"
   sensitive   = true
 }
 
 variable "vm-password" {
   type        = string
-  default     = "password"
+  default     = "vmpassword"
   description = "The passqord for the vm"
   sensitive   = true
 }
