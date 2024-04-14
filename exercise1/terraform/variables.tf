@@ -48,7 +48,7 @@ variable "vm-password" {
 }
 
 variable "nginxConfig" {
-  type = string
-  default = "nginxSetup.bash"
+  type        = string
+  default     = "nginxSetup.bash"
   description = "A ref to a script that is run on the vm to setup and configure nginx"
 }
