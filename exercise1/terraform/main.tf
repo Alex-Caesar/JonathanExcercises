@@ -207,8 +207,20 @@ resource "azurerm_virtual_machine" "ex1-vm" {
     version   = "latest"
   }
 
-# todo need an extention to do the startup
+}
 
+resource "azurerm_virtual_machine_extension" "ex1-vm-ext" {
+  name = "nginx-config"
+  virtual_machine_id = azurerm_virtual_machine.ex1-vm.id
+  publisher            = "Microsoft.Azure.Extensions"
+  type                 = "CustomScript"
+  type_handler_version = "2.0"
+
+  settings = <<SETTINGS
+  {
+    "commandsToExecute": "echo HELLO WORLD"
+  } 
+  SETTINGS
 }
 
 #------------------------ AKV associated resources ----------------------------------------------
