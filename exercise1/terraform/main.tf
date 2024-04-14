@@ -345,7 +345,7 @@ resource "azurerm_key_vault" "ex1-akv" {
 
 resource "azurerm_key_vault_access_policy" "ex1-akv-acc-pol-app-gw" {
   key_vault_id = azurerm_key_vault.ex1-akv.id
-  tenant_id    = data.azurerm_client_config.current.tenant_id.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
   object_id    = data.azurerm_client_config.current.object_id # todo: needs to be the security group of the app gw
 
   key_permissions = ["Get", "List"]
