@@ -31,10 +31,10 @@ resource "azurerm_virtual_network" "ex1-vnet" {
   address_space       = ["10.0.0.0/16"]
 }
 
-# ********************** SQL associated resources **************************************************
+# ********************** Database associated resources **************************************************
 
-#----------------------- SQL network resources -----------------------------------------------
-resource "azurerm_subnet" "ex1-subnet-sql" {
+#----------------------- Database network resources -----------------------------------------------
+resource "azurerm_subnet" "ex1-subnet-pe" {
   name                 = "${var.rg-name}-subnet-sql"
   resource_group_name  = azurerm_resource_group.ex1.name
   virtual_network_name = azurerm_virtual_network.ex1-vnet.name
@@ -48,7 +48,7 @@ resource "azurerm_network_security_group" "ex1-sql-netsecg" {
 }
 
 resource "azurerm_subnet_network_security_group_association" "ex1-secg-asso" {
-  subnet_id                 = azurerm_subnet.ex1-subnet-sql.id
+  subnet_id                 = azurerm_subnet.ex1-subnet-pe.id
   network_security_group_id = azurerm_network_security_group.ex1-sql-netsecg.id
 }
 
@@ -65,15 +65,35 @@ resource "azurerm_private_dns_zone_virtual_network_link" "ex1-priv-dns-z-net-lin
   virtual_network_id    = azurerm_virtual_network.ex1-vnet.id
 }
 
-resource "azurerm_private_endpoint" "ex1-sqldb-private-end" {
-  name                = "${var.rg-name}-private-end"
+resource "azurerm_private_endpoint" "ex1-redis-private-end" {
+  name                = "${var.rg-name}-redis-private-end"
   resource_group_name = azurerm_resource_group.ex1.name
   location            = azurerm_resource_group.ex1.location
 
-  subnet_id = azurerm_subnet.ex1-subnet-sql.id
+  subnet_id = azurerm_subnet.ex1-subnet-pe.id
 
   private_service_connection {
-    name                           = "${var.rg-name}-private-serv-conn"
+    name                           = "${var.rg-name}-redis-private-serv-conn"
+    private_connection_resource_id = azurerm_redis_cache.ex1-vm-redis.id
+    subresource_names              = ["file", "blob"]
+    is_manual_connection           = false
+  }
+
+  private_dns_zone_group {
+    name                 = "${var.rg-name}-private-dns-zg"
+    private_dns_zone_ids = [azurerm_private_dns_zone.ex1-priv-dns-zone.id]
+  }
+}
+
+resource "azurerm_private_endpoint" "ex1-sqldb-private-end" {
+  name                = "${var.rg-name}-sql-private-end"
+  resource_group_name = azurerm_resource_group.ex1.name
+  location            = azurerm_resource_group.ex1.location
+
+  subnet_id = azurerm_subnet.ex1-subnet-pe.id
+
+  private_service_connection {
+    name                           = "${var.rg-name}-sql-private-serv-conn"
     private_connection_resource_id = azurerm_mssql_database.ex1-sql-db.id
     subresource_names              = ["file", "blob"]
     is_manual_connection           = false
@@ -84,6 +104,7 @@ resource "azurerm_private_endpoint" "ex1-sqldb-private-end" {
     private_dns_zone_ids = [azurerm_private_dns_zone.ex1-priv-dns-zone.id]
   }
 }
+
 #----------------------- SQL Database resources -----------------------------------------------
 resource "azurerm_storage_account" "ex1-store-acc" {
   name                     = "${var.rg-name}-store-acc"
@@ -111,6 +132,17 @@ resource "azurerm_mssql_database" "ex1-sql-db" {
   lifecycle {
     prevent_destroy = true
   }
+}
+
+#----------------------- Redis Database resources -----------------------------------------------
+resource "azurerm_redis_cache" "ex1-vm-redis" {
+  name                = "${var.rg-name}-redis"
+  resource_group_name = azurerm_resource_group.ex1.name
+  location            = azurerm_resource_group.ex1.location
+  capacity            = 1
+  family              = "C"
+  sku_name            = "Basic"
+  public_network_access_enabled = false
 }
 
 # ************************** VM associated resources *******************************************
@@ -175,18 +207,8 @@ resource "azurerm_virtual_machine" "ex1-vm" {
     version   = "latest"
   }
 
-# todo need an extention to do the startup setup
+# todo need an extention to do the startup
 
-}
-
-resource "azurerm_redis_cache" "ex1-vm-redis" {
-  name                = "${var.rg-name}-redis"
-  resource_group_name = azurerm_resource_group.ex1.name
-  location            = azurerm_resource_group.ex1.location
-  capacity            = 1
-  family              = "C"
-  sku_name            = "Basic"
-  # todo
 }
 
 #------------------------ AKV associated resources ----------------------------------------------
