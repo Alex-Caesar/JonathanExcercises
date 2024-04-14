@@ -235,7 +235,7 @@ resource "azurerm_virtual_machine" "ex1-vm" {
 # Custom Script Extension to install NGINX and configure it
 resource "azurerm_virtual_machine_extension" "example" {
   name                 = "nginx-setup"
-  virtual_machine_id   = azurerm_virtual_machine.ex1-vm.id   
+  virtual_machine_id   = azurerm_virtual_machine.ex1-vm.id
   publisher            = "Microsoft.Azure.Extensions"
   type                 = "CustomScript"
   type_handler_version = "2.0"
