@@ -41,18 +41,16 @@ resource "azurerm_virtual_network" "ex1-vnet" {
   address_space       = ["10.0.0.0/16"]
 }
 
-# ********************** Database associated resources **************************************************
-
-#----------------------- Database network resources -----------------------------------------------
+#----------------------- private endpoint network resources -----------------------------------------------
 resource "azurerm_subnet" "ex1-subnet-pe" {
-  name                 = "${var.rg-name}-subnet-sql"
+  name                 = "${var.rg-name}-subnet-pe"
   resource_group_name  = azurerm_resource_group.ex1.name
   virtual_network_name = azurerm_virtual_network.ex1-vnet.name
   address_prefixes     = ["10.1.0.0/24"]
 }
 
 resource "azurerm_network_security_group" "ex1-sql-netsecg" {
-  name                = "${var.rg-name}-sql-netsecg"
+  name                = "${var.rg-name}-pe-netsecg"
   location            = azurerm_resource_group.ex1.location
   resource_group_name = azurerm_resource_group.ex1.name
 }
@@ -84,9 +82,9 @@ resource "azurerm_private_endpoint" "ex1-redis-private-end" {
 
   private_service_connection {
     name                           = "${var.rg-name}-redis-private-serv-conn"
-    private_connection_resource_id = azurerm_redis_cache.ex1-vm-redis.id
-    subresource_names              = ["file", "blob"]
-    is_manual_connection           = false
+    private_connection_resource_id = azurerm_redis_cache.ex1-vm-redis.id # do not think this is correct
+    # subresource ?
+    is_manual_connection = false
   }
 
   private_dns_zone_group {
@@ -114,6 +112,8 @@ resource "azurerm_private_endpoint" "ex1-sqldb-private-end" {
     private_dns_zone_ids = [azurerm_private_dns_zone.ex1-priv-dns-zone.id]
   }
 }
+
+# ********************** Database associated resources **************************************************
 
 #----------------------- SQL Database resources -----------------------------------------------
 resource "azurerm_storage_account" "ex1-store-acc" {
@@ -169,8 +169,21 @@ resource "azurerm_network_security_group" "ex1-vm-netsecg" {
   name                = "${var.rg-name}-vm-netsecg"
   location            = azurerm_resource_group.ex1.location
   resource_group_name = azurerm_resource_group.ex1.name
+}
 
-  # todo did not add rule for 443 traffic yet cause no public ip so unreachable ?
+
+resource "azurerm_network_security_rule" "ex1-netsec-r-443" {
+  name                        = "${var.rg-name}-netsec-r-443"
+  priority                    = 100
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_range      = "*"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+  resource_group_name         = azurerm_resource_group.ex1.name
+  network_security_group_name = azurerm_network_security_group.ex1-vm-netsecg.name
 }
 
 resource "azurerm_network_interface" "ex1-nic-vm" {
@@ -267,8 +280,8 @@ resource "azurerm_application_gateway" "ex1-app-gw" {
 
   # Bonus attempt
   waf_configuration {
-    enabled = true
-    firewall_mode = "Detection"
+    enabled          = true
+    firewall_mode    = "Detection"
     rule_set_version = 3.2
   }
 
@@ -352,3 +365,4 @@ resource "azurerm_key_vault_secret" "ex1-akv-db-secret" {
   # to ensure the connection secret string is created after the value is generated
   depends_on = [azurerm_storage_account.ex1-store-acc]
 }
+
