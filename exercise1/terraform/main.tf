@@ -117,7 +117,7 @@ resource "azurerm_private_endpoint" "ex1-sqldb-private-end" {
 
 #----------------------- SQL Database resources -----------------------------------------------
 resource "azurerm_storage_account" "ex1-store-acc" {
-  name                     = "${var.rg-name}-store-acc"
+  name                     = "${var.rg-name}0store0acc"
   resource_group_name      = azurerm_resource_group.ex1.name
   location                 = azurerm_resource_group.ex1.location
   account_tier             = "Standard"
@@ -205,7 +205,7 @@ resource "azurerm_virtual_machine" "ex1-vm" {
   resource_group_name = azurerm_resource_group.ex1.name
   location            = azurerm_resource_group.ex1.location
 
-  network_interface_ids = [azurerm_network_interface.ex1-nic-vm]
+  network_interface_ids = [azurerm_network_interface.ex1-nic-vm.id]
 
   vm_size = "A1_2"
 
@@ -337,7 +337,7 @@ resource "azurerm_key_vault" "ex1-akv" {
   resource_group_name = azurerm_resource_group.ex1.name
   location            = azurerm_resource_group.ex1.location
   sku_name            = "standard"
-  tenant_id           = data.azurerm_client_config.current
+  tenant_id           = data.azurerm_client_config.current.tenant_id
 }
 
 
@@ -352,7 +352,7 @@ resource "azurerm_key_vault_access_policy" "ex1-akv-acc-pol-vm" {
 # this is specifically for when creating the sql db that it then puts the connection key into the AKV
 resource "azurerm_key_vault_access_policy" "ex1-akv-acc-pol-tf" {
   key_vault_id = azurerm_key_vault.ex1-akv.id
-  tenant_id    = data.azurerm_client_config.current.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
   object_id    = data.azurerm_client_config.current.object_id
 
   key_permissions = ["Create", "Update"]
