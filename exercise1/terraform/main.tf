@@ -172,15 +172,14 @@ resource "azurerm_network_security_group" "ex1-vm-netsecg" {
   resource_group_name = azurerm_resource_group.ex1.name
 }
 
-
-resource "azurerm_network_security_rule" "ex1-netsec-r-443" {
+resource "azurerm_network_security_rule" "ex1-netsec-r-vm-443" {
   name                        = "${var.rg-name}-netsec-r-443"
   priority                    = 100
   direction                   = "Inbound"
   access                      = "Allow"
   protocol                    = "Tcp"
-  source_port_range           = "*"
-  destination_port_range      = "*"
+  source_port_range           = "443"
+  destination_port_range      = "443"
   source_address_prefix       = "*"
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.ex1.name
@@ -260,7 +259,7 @@ resource "azurerm_network_security_group" "ex1-app-gw" {
   location            = azurerm_resource_group.ex1.location
   resource_group_name = azurerm_resource_group.ex1.name
 
-  # todo allow 80 and 443
+  # todo allow 80 and 443 for incoming traffic?
 }
 
 resource "azurerm_user_assigned_identity" "ex1-app-gw-ass-iden" {
@@ -308,6 +307,7 @@ resource "azurerm_application_gateway" "ex1-app-gw" {
   }
   backend_address_pool {
     name = local.http_setting_name
+    # ip_addresses = [ azurerm_network_interface.ex1-nic-vm ] # doing this with another resource
   }
   backend_http_settings {
     name                  = local.http_setting_name
@@ -332,7 +332,8 @@ resource "azurerm_application_gateway" "ex1-app-gw" {
     backend_http_settings_name = local.http_setting_name
   }
 
-  # need a redirect for non TSL/SSL traffic
+  # need a redirect for port 80 or non TSL/SSL traffic ?
+
   identity {
     type         = "UserAssigned"
     identity_ids = [azurerm_user_assigned_identity.ex1-app-gw-ass-iden.id]
