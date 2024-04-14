@@ -263,6 +263,12 @@ resource "azurerm_network_security_group" "ex1-app-gw" {
   # todo allow 80 and 443
 }
 
+resource "azurerm_user_assigned_identity" "ex1-app-gw-ass-iden" {
+  name                = "${var.rg-name}-app-gw-ass-iden"
+  location            = azurerm_resource_group.ex1.location
+  resource_group_name = azurerm_resource_group.ex1.name
+}
+
 resource "azurerm_application_gateway" "ex1-app-gw" {
   name                = "${var.rg-name}-app-gw"
   resource_group_name = azurerm_resource_group.ex1.name
@@ -288,6 +294,10 @@ resource "azurerm_application_gateway" "ex1-app-gw" {
     name                = local.cert_tls_ssl
     key_vault_secret_id = azurerm_key_vault_certificate.ex1-cert-appgw.secret_id
   }
+  # trusted_root_certificate {
+  #   name = local.cert_tls_ssl
+  #   key_vault_secret_id = azurerm_key_vault_certificate.ex1-cert-appgw.secret_id
+  # }
   frontend_ip_configuration {
     name = local.frontend_ip_configuration_name
     # No public ip ?
@@ -322,8 +332,14 @@ resource "azurerm_application_gateway" "ex1-app-gw" {
     backend_http_settings_name = local.http_setting_name
   }
 
+  # need a redirect for non TSL/SSL traffic
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.ex1-app-gw-ass-iden.id]
+  }
+
   #ensuring the cert is ready to be utilized
-  depends_on = [azurerm_key_vault.ex1-akv, azurerm_key_vault_access_policy.ex1-akv-acc-pol-app-gw, azurerm_key_vault_certificate.ex1-cert-appgw]
+  depends_on = [azurerm_key_vault.ex1-akv, azurerm_user_assigned_identity.ex1-app-gw-ass-iden, azurerm_key_vault_certificate.ex1-cert-appgw]
 }
 
 resource "azurerm_network_interface_application_gateway_backend_address_pool_association" "ex1-app-gw-nic-asso" {
@@ -335,20 +351,22 @@ resource "azurerm_network_interface_application_gateway_backend_address_pool_ass
 
 #------------------------ AKV associated resources ----------------------------------------------
 resource "azurerm_key_vault" "ex1-akv" {
-  name                = "${var.rg-name}-akv"
-  resource_group_name = azurerm_resource_group.ex1.name
-  location            = azurerm_resource_group.ex1.location
-  sku_name            = "standard"
-  tenant_id           = data.azurerm_client_config.current.tenant_id
+  name                      = "${var.rg-name}-akv"
+  resource_group_name       = azurerm_resource_group.ex1.name
+  location                  = azurerm_resource_group.ex1.location
+  sku_name                  = "standard"
+  tenant_id                 = data.azurerm_client_config.current.tenant_id
+  enable_rbac_authorization = true
 }
 
+data "azurerm_role_definition" "keyvault-cert-user" {
+  name = "Key Vault Certificate User"
+}
 
-resource "azurerm_key_vault_access_policy" "ex1-akv-acc-pol-app-gw" {
-  key_vault_id = azurerm_key_vault.ex1-akv.id
-  tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = data.azurerm_client_config.current.object_id # todo: needs to be the security group of the app gw
-
-  key_permissions = ["Get", "List"]
+resource "azurerm_role_assignment" "app-gw-kv-role" {
+  scope                = azurerm_key_vault.ex1-akv.id
+  role_definition_name = data.azurerm_role_definition.keyvault-cert-user.name
+  principal_id         = azurerm_user_assigned_identity.ex1-app-gw-ass-iden.id
 }
 
 # this is specifically for when creating the sql db that it then puts the connection key into the AKV
@@ -365,7 +383,7 @@ resource "azurerm_key_vault_secret" "ex1-akv-db-secret" {
   value        = azurerm_mssql_server.ex1-sql-server.administrator_login_password
   key_vault_id = azurerm_key_vault.ex1-akv.id
   # to ensure the connection secret string is created after the value is generated
-  depends_on = [azurerm_storage_account.ex1-store-acc]
+  depends_on = [azurerm_mssql_database.ex1-sql-db]
 }
 
 resource "azurerm_key_vault_certificate" "ex1-cert-appgw" {
