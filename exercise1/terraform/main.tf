@@ -26,6 +26,7 @@ locals {
   listener_name                  = "${azurerm_virtual_network.ex1-vnet.name}-httplstn"
   request_routing_rule_name      = "${azurerm_virtual_network.ex1-vnet.name}-rqrt"
   redirect_configuration_name    = "${azurerm_virtual_network.ex1-vnet.name}-rdrcfg"
+  cert_tls_ssl                   = "${var.rg-name}-app-gw-cert"
 }
 
 #------------------------------ Base resources --------------------------------------------------------
@@ -277,14 +278,16 @@ resource "azurerm_application_gateway" "ex1-app-gw" {
     name      = "${var.rg-name}-app-gw-ip-config"
     subnet_id = azurerm_subnet.ex1-subnet-app-gw.id
   }
-
   # Bonus attempt
   waf_configuration {
     enabled          = true
     firewall_mode    = "Detection"
     rule_set_version = 3.2
   }
-
+  ssl_certificate {
+    name                = local.cert_tls_ssl
+    key_vault_secret_id = azurerm_key_vault_certificate.ex1-cert-appgw.secret_id
+  }
   frontend_ip_configuration {
     name = local.frontend_ip_configuration_name
     # No public ip ?
@@ -293,11 +296,9 @@ resource "azurerm_application_gateway" "ex1-app-gw" {
     name = local.frontend_ip_configuration_name
     port = 443
   }
-
   backend_address_pool {
     name = local.http_setting_name
   }
-
   backend_http_settings {
     name                  = local.http_setting_name
     cookie_based_affinity = "Disabled"
@@ -305,17 +306,16 @@ resource "azurerm_application_gateway" "ex1-app-gw" {
     protocol              = "Https"
     request_timeout       = 60
   }
-
   http_listener {
     name                           = local.listener_name
     frontend_ip_configuration_name = "${var.rg-name}-app-gw-front-ip-name"
     frontend_port_name             = "${var.rg-name}-app-gw-front-port-name"
     protocol                       = "Https"
+    ssl_certificate_name           = local.cert_tls_ssl
   }
-
   request_routing_rule {
     name                       = local.request_routing_rule_name
-    priority                   = 6
+    priority                   = 10
     rule_type                  = "Basic"
     http_listener_name         = local.listener_name
     backend_address_pool_name  = local.backend_address_pool_name
