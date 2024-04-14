@@ -25,3 +25,24 @@ variable "db-password" {
   description = "The passqord for the msSQL server"
   sensitive   = true
 }
+
+variable "vm_name" {
+  type        = string
+  default     = "CaesarVm"
+  description = "The name of the virtual machine"
+  sensitive   = false
+}
+
+variable "vm-admin" {
+  type        = string
+  default     = "admin"
+  description = "The username for the vm"
+  sensitive   = true
+}
+
+variable "vm-password" {
+  type        = string
+  default     = "password"
+  description = "The passqord for the vm"
+  sensitive   = true
+}

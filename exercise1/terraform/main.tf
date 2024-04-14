@@ -113,7 +113,9 @@ resource "azurerm_mssql_database" "ex1-sql-db" {
   }
 }
 
-#--------------------------- VM associated resources ------------------------------
+# ************************** VM associated resources *******************************************
+
+#--------------------------- VM network resources ------------------------------
 resource "azurerm_subnet" "ex1-subnet-vm" {
   name                 = "${var.rg-name}-subnet-vm"
   resource_group_name  = azurerm_resource_group.ex1.name
@@ -127,7 +129,44 @@ resource "azurerm_network_security_group" "ex1-vm-netsecg" {
   resource_group_name = azurerm_resource_group.ex1.name
 }
 
-#  VM HERE
+resource "azurerm_network_interface" "ex1-nic-vm" {
+  name                = "${var.rg-name}-nic-vm"
+  resource_group_name = azurerm_resource_group.ex1.name
+  location            = azurerm_resource_group.ex1.location
+
+  ip_configuration {
+    name                          = "${var.rg-name}-nic-vm-ip"
+    subnet_id                     = azurerm_network_security_group.ex1-vm-netsecg.id
+    private_ip_address_allocation = "static"
+  }
+}
+
+#--------------------------- VM associated resources ------------------------------
+
+resource "azurerm_virtual_machine" "ex1-vm" {
+  name                = "${var.rg-name}-vm"
+  resource_group_name = azurerm_resource_group.ex1.name
+  location            = azurerm_resource_group.ex1.location
+
+  network_interface_ids = [azurerm_network_interface.ex1-nic-vm]
+
+  vm_size = "A1_2"
+
+  storage_os_disk {
+    name          = "${var.rg-name}-vm-os-disk"
+    caching       = "ReadWrite"
+    create_option = "fromImage"
+    disk_size_gb  = 4
+    os_type       = "Linux"
+  }
+
+  os_profile {
+    admin_username = var.vm-admin
+    admin_password = var.vm-password
+    computer_name  = var.vm_name
+  }
+
+}
 
 resource "azurerm_redis_cache" "ex1-vm-redis" {
   name                = "${var.rg-name}-redis"
