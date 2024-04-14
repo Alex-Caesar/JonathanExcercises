@@ -170,7 +170,7 @@ resource "azurerm_network_security_group" "ex1-vm-netsecg" {
   location            = azurerm_resource_group.ex1.location
   resource_group_name = azurerm_resource_group.ex1.name
 
-  # did not add rule for 443 traffic yet cause no public ip so unreachable ?
+  # todo did not add rule for 443 traffic yet cause no public ip so unreachable ?
 }
 
 resource "azurerm_network_interface" "ex1-nic-vm" {
@@ -180,63 +180,9 @@ resource "azurerm_network_interface" "ex1-nic-vm" {
 
   ip_configuration {
     name                          = "${var.rg-name}-nic-vm-ip"
-    subnet_id                     = azurerm_network_security_group.ex1-vm-netsecg.id
-    private_ip_address_allocation = "static"
+    subnet_id                     = azurerm_subnet.ex1-subnet-vm.id
+    private_ip_address_allocation = "Dynamic"
   }
-}
-
-resource "azurerm_application_gateway" "ex1-app-gw" {
-  name                = "${var.rg-name}-app-gw"
-  resource_group_name = azurerm_resource_group.ex1.name
-  location            = azurerm_resource_group.ex1.location
-
-  sku {
-    name     = "Standard_Small"
-    tier     = "WAF_v2"
-    capacity = 1
-  }
-
-  gateway_ip_configuration {
-    name      = "${var.rg-name}-app-gw-ip-config"
-    subnet_id = azurerm_subnet.ex1-subnet-vm.id
-  }
-
-  frontend_ip_configuration {
-    name = local.frontend_ip_configuration_name
-    # No public ip
-  }
-  frontend_port {
-    name = local.frontend_ip_configuration_name
-    port = 443
-  }
-
-  backend_address_pool {
-    name = local.http_setting_name
-  }
-
-  backend_http_settings {
-    name                  = local.http_setting_name
-    cookie_based_affinity = false
-    port                  = 443
-    protocol              = "Https"
-  }
-
-  http_listener {
-    name                           = local.listener_name
-    frontend_ip_configuration_name = "${var.rg-name}-app-gw-front-ip-name"
-    frontend_port_name             = "${var.rg-name}-app-gw-front-port-name"
-    protocol                       = "Https"
-  }
-
-  request_routing_rule {
-    name                       = local.request_routing_rule_name
-    priority                   = 6
-    rule_type                  = "Basic"
-    http_listener_name         = local.listener_name
-    backend_address_pool_name  = local.backend_address_pool_name
-    backend_http_settings_name = local.http_setting_name
-  }
-
 }
 
 #--------------------------- VM associated resources ------------------------------
@@ -286,6 +232,91 @@ resource "azurerm_virtual_machine_extension" "ex1-vm-ext" {
   } 
   SETTINGS
 }
+
+#--------------------------- App Gateway network resources ------------------------------
+resource "azurerm_subnet" "ex1-subnet-app-gw" {
+  name                 = "${var.rg-name}-subnet-app-gw"
+  resource_group_name  = azurerm_resource_group.ex1.name
+  virtual_network_name = azurerm_virtual_network.ex1-vnet.name
+  address_prefixes     = ["10.3.0.0/24"]
+}
+
+resource "azurerm_network_security_group" "ex1-app-gw" {
+  name                = "${var.rg-name}-app-gw"
+  location            = azurerm_resource_group.ex1.location
+  resource_group_name = azurerm_resource_group.ex1.name
+
+  # todo allow 80 and 443
+}
+
+resource "azurerm_application_gateway" "ex1-app-gw" {
+  name                = "${var.rg-name}-app-gw"
+  resource_group_name = azurerm_resource_group.ex1.name
+  location            = azurerm_resource_group.ex1.location
+
+  sku {
+    name     = "Standard_v2"
+    tier     = "Standard_v2"
+    capacity = 1
+  }
+
+  gateway_ip_configuration {
+    name      = "${var.rg-name}-app-gw-ip-config"
+    subnet_id = azurerm_subnet.ex1-subnet-app-gw.id
+  }
+
+  # Bonus attempt
+  waf_configuration {
+    enabled = true
+    firewall_mode = "Detection"
+    rule_set_version = 3.2
+  }
+
+  frontend_ip_configuration {
+    name = local.frontend_ip_configuration_name
+    # No public ip ?
+  }
+  frontend_port {
+    name = local.frontend_ip_configuration_name
+    port = 443
+  }
+
+  backend_address_pool {
+    name = local.http_setting_name
+  }
+
+  backend_http_settings {
+    name                  = local.http_setting_name
+    cookie_based_affinity = "Disabled"
+    port                  = 443
+    protocol              = "Https"
+    request_timeout       = 60
+  }
+
+  http_listener {
+    name                           = local.listener_name
+    frontend_ip_configuration_name = "${var.rg-name}-app-gw-front-ip-name"
+    frontend_port_name             = "${var.rg-name}-app-gw-front-port-name"
+    protocol                       = "Https"
+  }
+
+  request_routing_rule {
+    name                       = local.request_routing_rule_name
+    priority                   = 6
+    rule_type                  = "Basic"
+    http_listener_name         = local.listener_name
+    backend_address_pool_name  = local.backend_address_pool_name
+    backend_http_settings_name = local.http_setting_name
+  }
+
+}
+
+resource "azurerm_network_interface_application_gateway_backend_address_pool_association" "ex1-app-gw-nic-asso" {
+  network_interface_id    = azurerm_network_interface.ex1-nic-vm.id
+  ip_configuration_name   = "${var.rg-name}-app-gw-nic-ip-name"
+  backend_address_pool_id = one(azurerm_application_gateway.ex1-app-gw.backend_address_pool).id
+}
+
 
 #------------------------ AKV associated resources ----------------------------------------------
 resource "azurerm_key_vault" "ex1-akv" {

@@ -10,7 +10,7 @@ sudo apt install -y nginx
 sudo tee /etc/nginx/sites-available/default <<EOF
 server {
     listen 443 default_server;
-    server_name CaesarVm;
+    server_name _;
 
     location / {
         proxy_pass http://localhost:80;
