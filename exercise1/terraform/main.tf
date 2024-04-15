@@ -118,7 +118,7 @@ resource "azurerm_private_endpoint" "ex1-sqldb-private-end" {
 
 #----------------------- SQL Database resources -----------------------------------------------
 resource "azurerm_storage_account" "ex1-store-acc" {
-  name                     = "${var.rg-name}9store9acc"
+  name                     = "${var.rg-name}store9acc"
   resource_group_name      = azurerm_resource_group.ex1.name
   location                 = azurerm_resource_group.ex1.location
   account_tier             = "Standard"
@@ -357,7 +357,7 @@ resource "azurerm_application_gateway" "ex1-app-gw" {
 
   identity {
     type         = "UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.ex1-app-gw-ass-iden.id]
+    identity_ids = [azurerm_user_assigned_identity.ex1-app-gw-ass-iden.principal_id]
   }
 
   #ensuring the cert is ready to be utilized
@@ -388,7 +388,7 @@ data "azurerm_role_definition" "keyvault-cert-user" {
 resource "azurerm_role_assignment" "app-gw-kv-role" {
   scope                = azurerm_key_vault.ex1-akv.id
   role_definition_name = data.azurerm_role_definition.keyvault-cert-user.name
-  principal_id         = azurerm_user_assigned_identity.ex1-app-gw-ass-iden.id
+  principal_id         = azurerm_user_assigned_identity.ex1-app-gw-ass-iden.principal_id
 }
 
 # this is specifically for when creating the sql db that it then puts the connection key into the AKV
