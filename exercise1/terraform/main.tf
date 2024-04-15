@@ -391,13 +391,10 @@ resource "azurerm_role_assignment" "app-gw-kv-role" {
   principal_id         = azurerm_user_assigned_identity.ex1-app-gw-ass-iden.principal_id
 }
 
-# this is specifically for when creating the sql db that it then puts the connection key into the AKV
-resource "azurerm_key_vault_access_policy" "ex1-akv-acc-pol-tf" {
-  key_vault_id = azurerm_key_vault.ex1-akv.id
-  tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id    = data.azurerm_client_config.current.object_id
-
-  key_permissions = ["Create", "Update"]
+resource "azurerm_role_assignment" "client-role" {
+  scope                = azurerm_resource_group.ex1.id
+  role_definition_name = "Contributor"
+  principal_id         = data.azurerm_client_config.current.object_id
 }
 
 resource "azurerm_key_vault_secret" "ex1-akv-db-secret" {
