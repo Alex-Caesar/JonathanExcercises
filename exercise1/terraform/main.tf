@@ -207,7 +207,7 @@ resource "azurerm_virtual_machine" "ex1-vm" {
 
   network_interface_ids = [azurerm_network_interface.ex1-nic-vm.id]
 
-  vm_size = "A1_2"
+  vm_size = "Standard_B1s"
 
   storage_os_disk {
     name          = "${var.rg-name}-vm-os-disk"
