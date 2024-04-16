@@ -15,129 +15,129 @@ provider "azurerm" {
   }
 }
 
-#--------------------------------- Base data -------------------------------------------------------------
+#_________________________________ Base data _____________________________________________________________
 data "azurerm_client_config" "current" {}
 
 locals {
-  backend_address_pool_name      = "${azurerm_virtual_network.ex1-vnet.name}-beap"
-  frontend_port_name             = "${azurerm_virtual_network.ex1-vnet.name}-feport"
-  frontend_ip_configuration_name = "${azurerm_virtual_network.ex1-vnet.name}-feip"
-  http_setting_name              = "${azurerm_virtual_network.ex1-vnet.name}-be-htst"
-  listener_name                  = "${azurerm_virtual_network.ex1-vnet.name}-httplstn"
-  request_routing_rule_name      = "${azurerm_virtual_network.ex1-vnet.name}-rqrt"
-  redirect_configuration_name    = "${azurerm_virtual_network.ex1-vnet.name}-rdrcfg"
-  cert_tls_ssl                   = "${var.rg-name}-app-gw-cert"
+  backend_address_pool_name      = "${azurerm_virtual_network.ex1_vnet.name}-beap"
+  frontend_port_name             = "${azurerm_virtual_network.ex1_vnet.name}-feport"
+  frontend_ip_configuration_name = "${azurerm_virtual_network.ex1_vnet.name}-feip"
+  http_setting_name              = "${azurerm_virtual_network.ex1_vnet.name}-be_htst"
+  listener_name                  = "${azurerm_virtual_network.ex1_vnet.name}-httplstn"
+  request_routing_rule_name      = "${azurerm_virtual_network.ex1_vnet.name}-rqrt"
+  redirect_configuration_name    = "${azurerm_virtual_network.ex1_vnet.name}-rdrcfg"
+  cert_tls_ssl                   = "${var.rg_name}_app_gw_cert"
 }
 
-#------------------------------ Base resources --------------------------------------------------------
+#______________________________ Base resources ________________________________________________________
 resource "azurerm_resource_group" "ex1" {
-  name     = var.rg-name
-  location = var.rg-location
+  name     = var.rg_name
+  location = var.rg_location
 }
 
-resource "azurerm_virtual_network" "ex1-vnet" {
-  name                = "${var.rg-name}-vnet"
+resource "azurerm_virtual_network" "ex1_vnet" {
+  name                = "${var.rg_name}_vnet"
   resource_group_name = azurerm_resource_group.ex1.name
   location            = azurerm_resource_group.ex1.location
   address_space       = ["10.0.0.0/16"]
 }
 
-#----------------------- private endpoint network resources -----------------------------------------------
-resource "azurerm_subnet" "ex1-subnet-pe" {
-  name                 = "${var.rg-name}-subnet-pe"
+#_______________________ private endpoint network resources _______________________________________________
+resource "azurerm_subnet" "ex1_subnet_pe" {
+  name                 = "${var.rg_name}_subnet_pe"
   resource_group_name  = azurerm_resource_group.ex1.name
-  virtual_network_name = azurerm_virtual_network.ex1-vnet.name
+  virtual_network_name = azurerm_virtual_network.ex1_vnet.name
   address_prefixes     = ["10.0.0.0/24"]
 }
 
-resource "azurerm_network_security_group" "ex1-sql-netsecg" {
-  name                = "${var.rg-name}-pe-netsecg"
+resource "azurerm_network_security_group" "ex1_sql_netsecg" {
+  name                = "${var.rg_name}_pe_netsecg"
   location            = azurerm_resource_group.ex1.location
   resource_group_name = azurerm_resource_group.ex1.name
 }
 
-resource "azurerm_subnet_network_security_group_association" "ex1-secg-asso" {
-  subnet_id                 = azurerm_subnet.ex1-subnet-pe.id
-  network_security_group_id = azurerm_network_security_group.ex1-sql-netsecg.id
+resource "azurerm_subnet_network_security_group_association" "ex1_secg_asso" {
+  subnet_id                 = azurerm_subnet.ex1_subnet_pe.id
+  network_security_group_id = azurerm_network_security_group.ex1_sql_netsecg.id
 }
 
-resource "azurerm_private_dns_zone" "ex1-priv-dns-zone" {
-  name                = "${var.rg-name}.privatelink.database.windows.net"
+resource "azurerm_private_dns_zone" "ex1_priv_dns_zone" {
+  name                = "${var.rg_name}.privatelink.database.windows.net"
   resource_group_name = azurerm_resource_group.ex1.name
 }
 
-resource "azurerm_private_dns_zone_virtual_network_link" "ex1-priv-dns-z-net-link" {
-  name                = "${var.rg-name}-priv-dns-z-net-link"
-  resource_group_name = azurerm_resource_group.ex1.name
-  registration_enabled = true
-  private_dns_zone_name = azurerm_private_dns_zone.ex1-priv-dns-zone.name
-  virtual_network_id    = azurerm_virtual_network.ex1-vnet.id
+resource "azurerm_private_dns_zone_virtual_network_link" "ex1_priv_dns_z_net_link" {
+  name                  = "${var.rg_name}_priv_dns_z_net_link"
+  resource_group_name   = azurerm_resource_group.ex1.name
+  registration_enabled  = true
+  private_dns_zone_name = azurerm_private_dns_zone.ex1_priv_dns_zone.name
+  virtual_network_id    = azurerm_virtual_network.ex1_vnet.id
 }
 
-resource "azurerm_private_endpoint" "ex1-redis-private-end" {
-  name                = "${var.rg-name}-redis-private-end"
+# resource "azurerm_private_endpoint" "ex1_redis_private_end" {
+#   name                = "${var.rg_name}_redis_private_end"
+#   resource_group_name = azurerm_resource_group.ex1.name
+#   location            = azurerm_resource_group.ex1.location
+
+#   subnet_id = azurerm_subnet.ex1_subnet_pe.id
+
+#   private_service_connection {
+#     name                           = "${var.rg_name}_redis_private_serv_conn"
+#     private_connection_resource_id = azurerm_redis_cache.ex1_vm_redis.id
+#     subresource_names              = ["redisCache"]
+#     is_manual_connection           = false
+#   }
+
+#   private_dns_zone_group {
+#     name                 = "${var.rg_name}_private_dns_zg_redis"
+#     private_dns_zone_ids = [azurerm_private_dns_zone.ex1_priv_dns_zone.id]
+#   }
+# }
+
+resource "azurerm_private_endpoint" "ex1_sqldb_private_end" {
+  name                = "${var.rg_name}_sql_private_end"
   resource_group_name = azurerm_resource_group.ex1.name
   location            = azurerm_resource_group.ex1.location
 
-  subnet_id = azurerm_subnet.ex1-subnet-pe.id
+  subnet_id = azurerm_subnet.ex1_subnet_pe.id
 
   private_service_connection {
-    name                           = "${var.rg-name}-redis-private-serv-conn"
-    private_connection_resource_id = azurerm_redis_cache.ex1-vm-redis.id
-    subresource_names              = ["redisCache"]
-    is_manual_connection           = false
-  }
-
-  private_dns_zone_group {
-    name                 = "${var.rg-name}-private-dns-zg-redis"
-    private_dns_zone_ids = [azurerm_private_dns_zone.ex1-priv-dns-zone.id]
-  }
-}
-
-resource "azurerm_private_endpoint" "ex1-sqldb-private-end" {
-  name                = "${var.rg-name}-sql-private-end"
-  resource_group_name = azurerm_resource_group.ex1.name
-  location            = azurerm_resource_group.ex1.location
-
-  subnet_id = azurerm_subnet.ex1-subnet-pe.id
-
-  private_service_connection {
-    name                           = "${var.rg-name}-sql-private-serv-conn"
-    private_connection_resource_id = azurerm_mssql_server.ex1-sql-server.id
+    name                           = "${var.rg_name}_sql_private_serv_conn"
+    private_connection_resource_id = azurerm_mssql_server.ex1_sql_server.id
     subresource_names              = ["sqlServer"]
     is_manual_connection           = false
   }
 
   private_dns_zone_group {
-    name                 = "${var.rg-name}-private-dns-zg-sql"
-    private_dns_zone_ids = [azurerm_private_dns_zone.ex1-priv-dns-zone.id]
+    name                 = "${var.rg_name}_private_dns_zg_sql"
+    private_dns_zone_ids = [azurerm_private_dns_zone.ex1_priv_dns_zone.id]
   }
 }
 
 # ********************** Database associated resources **************************************************
 
-#----------------------- SQL Database resources -----------------------------------------------
-resource "azurerm_storage_account" "ex1-store-acc" {
-  name                     = "${var.rg-name}store9acc"
+#_______________________ SQL Database resources _______________________________________________
+resource "azurerm_storage_account" "ex1_store_acc" {
+  name                     = "${var.rg_name}store9acc"
   resource_group_name      = azurerm_resource_group.ex1.name
   location                 = azurerm_resource_group.ex1.location
   account_tier             = "Standard"
   account_replication_type = "LRS"
 }
 
-resource "azurerm_mssql_server" "ex1-sql-server" {
-  name                = "${var.rg-name}-sql-server"
+resource "azurerm_mssql_server" "ex1_sql_server" {
+  name                = "${var.rg_name}sqlserver"
   resource_group_name = azurerm_resource_group.ex1.name
   location            = azurerm_resource_group.ex1.location
   version             = "12.0"
 
-  administrator_login          = var.db-admin
-  administrator_login_password = var.db-password
+  administrator_login          = var.db_admin
+  administrator_login_password = var.db_password
 }
 
-resource "azurerm_mssql_database" "ex1-sql-db" {
-  name      = "${var.rg-name}-sql-db"
-  server_id = azurerm_mssql_server.ex1-sql-server.id
+resource "azurerm_mssql_database" "ex1_sql_db" {
+  name      = "${var.rg_name}_sql_db"
+  server_id = azurerm_mssql_server.ex1_sql_server.id
 
   # prevent the possibility of accidental data loss
   lifecycle {
@@ -145,35 +145,35 @@ resource "azurerm_mssql_database" "ex1-sql-db" {
   }
 }
 
-#----------------------- Redis Database resources -----------------------------------------------
-resource "azurerm_redis_cache" "ex1-vm-redis" {
-  name                          = "${var.rg-name}-redis"
-  resource_group_name           = azurerm_resource_group.ex1.name
-  location                      = azurerm_resource_group.ex1.location
-  capacity                      = 1
-  family                        = "C"
-  sku_name                      = "Basic"
-  public_network_access_enabled = false
-}
+#_______________________ Redis Database resources _______________________________________________
+# resource "azurerm_redis_cache" "ex1_vm_redis" {
+#   name                          = "${var.rg_name}_redis"
+#   resource_group_name           = azurerm_resource_group.ex1.name
+#   location                      = azurerm_resource_group.ex1.location
+#   capacity                      = 1
+#   family                        = "C"
+#   sku_name                      = "Basic"
+#   public_network_access_enabled = false
+# }
 
 # ************************** VM associated resources *******************************************
 
-#--------------------------- VM network resources ------------------------------
-resource "azurerm_subnet" "ex1-subnet-vm" {
-  name                 = "${var.rg-name}-subnet-vm"
+#___________________________ VM network resources ______________________________
+resource "azurerm_subnet" "ex1_subnet_vm" {
+  name                 = "${var.rg_name}_subnet_vm"
   resource_group_name  = azurerm_resource_group.ex1.name
-  virtual_network_name = azurerm_virtual_network.ex1-vnet.name
+  virtual_network_name = azurerm_virtual_network.ex1_vnet.name
   address_prefixes     = ["10.0.2.0/24"]
 }
 
-resource "azurerm_network_security_group" "ex1-vm-netsecg" {
-  name                = "${var.rg-name}-vm-netsecg"
+resource "azurerm_network_security_group" "ex1_vm_netsecg" {
+  name                = "${var.rg_name}_vm_netsecg"
   location            = azurerm_resource_group.ex1.location
   resource_group_name = azurerm_resource_group.ex1.name
 }
 
-resource "azurerm_network_security_rule" "ex1-netsec-r-vm-443" {
-  name                        = "${var.rg-name}-netsec-r-443"
+resource "azurerm_network_security_rule" "ex1_netsec_r_vm_443" {
+  name                        = "${var.rg_name}_netsec_r_443"
   priority                    = 100
   direction                   = "Inbound"
   access                      = "Allow"
@@ -183,49 +183,49 @@ resource "azurerm_network_security_rule" "ex1-netsec-r-vm-443" {
   source_address_prefix       = "*"
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.ex1.name
-  network_security_group_name = azurerm_network_security_group.ex1-vm-netsecg.name
+  network_security_group_name = azurerm_network_security_group.ex1_vm_netsecg.name
 }
 
-resource "azurerm_network_interface" "ex1-nic-vm" {
-  name                = "${var.rg-name}-nic-vm"
+resource "azurerm_network_interface" "ex1_nic_vm" {
+  name                = "${var.rg_name}_nic_vm"
   resource_group_name = azurerm_resource_group.ex1.name
   location            = azurerm_resource_group.ex1.location
 
   ip_configuration {
-    name                          = "${var.rg-name}-nic-vm-ip"
-    subnet_id                     = azurerm_subnet.ex1-subnet-vm.id
+    name                          = "${var.rg_name}_nic_vm_ip"
+    subnet_id                     = azurerm_subnet.ex1_subnet_vm.id
     private_ip_address_allocation = "Dynamic"
   }
 }
 
-#--------------------------- VM associated resources ------------------------------
+#___________________________ VM associated resources ______________________________
 
-resource "azurerm_virtual_machine" "ex1-vm" {
-  name                = "${var.rg-name}-vm"
+resource "azurerm_virtual_machine" "ex1_vm" {
+  name                = "${var.rg_name}_vm"
   resource_group_name = azurerm_resource_group.ex1.name
   location            = azurerm_resource_group.ex1.location
 
-  network_interface_ids = [azurerm_network_interface.ex1-nic-vm.id]
+  network_interface_ids = [azurerm_network_interface.ex1_nic_vm.id]
 
   vm_size = "Standard_B1s"
 
   storage_os_disk {
-    name          = "${var.rg-name}-vm-os-disk"
+    name          = "${var.rg_name}_vm_os_disk"
     caching       = "ReadWrite"
     create_option = "fromImage"
     os_type       = "Linux"
   }
 
   os_profile {
-    admin_username = var.vm-admin
-    admin_password = var.vm-password
+    admin_username = var.vm_admin
+    admin_password = var.vm_password
     computer_name  = var.vm_name
   }
 
   storage_image_reference {
     publisher = "Canonical"
     offer     = "UbuntuServer"
-    sku       = "18.04-LTS"
+    sku       = "18.04_LTS"
     version   = "latest"
   }
 
@@ -236,50 +236,50 @@ resource "azurerm_virtual_machine" "ex1-vm" {
 }
 
 # Custom Script Extension to install NGINX and configure it
-resource "azurerm_virtual_machine_extension" "example" {
-  name                 = "nginx-setup"
-  virtual_machine_id   = azurerm_virtual_machine.ex1-vm.id
-  publisher            = "Microsoft.Azure.Extensions"
-  type                 = "CustomScript"
-  type_handler_version = "2.0"
+# resource "azurerm_virtual_machine_extension" "example" {
+#   name                 = "nginx_setup"
+#   virtual_machine_id   = azurerm_virtual_machine.ex1_vm.id
+#   publisher            = "Microsoft.Azure.Extensions"
+#   type                 = "CustomScript"
+#   type_handler_version = "2.0"
 
-  settings = <<SETTINGS
-    {
-        "script": "https://raw.githubusercontent.com/Alex-Caesar/JonathanExercises/exercise1/exercise1/nginxSetup.bash",
-        "commandToExecute": "bash installNginx.sh"
-    }
-SETTINGS
-}
+#   settings = <<SETTINGS
+#     {
+#         "script": "https://raw.githubusercontent.com/Alex_Caesar/JonathanExercises/exercise1/exercise1/nginxSetup.bash",
+#         "commandToExecute": "bash installNginx.sh"
+#     }
+# SETTINGS
+# }
 
-#--------------------------- App Gateway network resources ------------------------------
-resource "azurerm_subnet" "ex1-subnet-app-gw" {
-  name                 = "${var.rg-name}-subnet-app-gw"
+#___________________________ App Gateway network resources ______________________________
+resource "azurerm_subnet" "ex1_subnet_app_gw" {
+  name                 = "${var.rg_name}_subnet_app_gw"
   resource_group_name  = azurerm_resource_group.ex1.name
-  virtual_network_name = azurerm_virtual_network.ex1-vnet.name
+  virtual_network_name = azurerm_virtual_network.ex1_vnet.name
   address_prefixes     = ["10.0.3.0/24"]
 }
 
-resource "azurerm_network_security_group" "ex1-app-gw" {
-  name                = "${var.rg-name}-app-gw"
+resource "azurerm_network_security_group" "ex1_app_gw" {
+  name                = "${var.rg_name}_app_gw"
   location            = azurerm_resource_group.ex1.location
   resource_group_name = azurerm_resource_group.ex1.name
 
   # todo allow 80 and 443 for incoming traffic?
 }
 
-resource "azurerm_user_assigned_identity" "ex1-app-gw-ass-iden" {
-  name                = "${var.rg-name}-app-gw-ass-iden"
+resource "azurerm_user_assigned_identity" "ex1_app_gw_ass_iden" {
+  name                = "${var.rg_name}_app_gw_ass_iden"
   location            = azurerm_resource_group.ex1.location
   resource_group_name = azurerm_resource_group.ex1.name
 }
 
-data "azurerm_user_assigned_identity" "data-ex1-app-gw-ass-iden" {
-  name                = "${var.rg-name}-app-gw-ass-iden"
+data "azurerm_user_assigned_identity" "data_ex1_app_gw_ass_iden" {
+  name                = "${var.rg_name}_app_gw_ass_iden"
   resource_group_name = azurerm_resource_group.ex1.name
 }
 
-resource "azurerm_application_gateway" "ex1-app-gw" {
-  name                = "${var.rg-name}-app-gw"
+resource "azurerm_application_gateway" "ex1_app_gw" {
+  name                = "${var.rg_name}_app_gw"
   resource_group_name = azurerm_resource_group.ex1.name
   location            = azurerm_resource_group.ex1.location
 
@@ -290,8 +290,8 @@ resource "azurerm_application_gateway" "ex1-app-gw" {
   }
 
   gateway_ip_configuration {
-    name      = "${var.rg-name}-app-gw-ip-config"
-    subnet_id = azurerm_subnet.ex1-subnet-app-gw.id
+    name      = "${var.rg_name}_app_gw_ip_config"
+    subnet_id = azurerm_subnet.ex1_subnet_app_gw.id
   }
   # Bonus attempt
   waf_configuration {
@@ -301,7 +301,7 @@ resource "azurerm_application_gateway" "ex1-app-gw" {
   }
   ssl_certificate {
     name                = local.cert_tls_ssl
-    key_vault_secret_id = azurerm_key_vault_certificate.ex1-cert-appgw.secret_id
+    key_vault_secret_id = azurerm_key_vault_certificate.ex1_cert_appgw.secret_id
   }
   frontend_ip_configuration {
     name = local.frontend_ip_configuration_name
@@ -313,7 +313,7 @@ resource "azurerm_application_gateway" "ex1-app-gw" {
   }
   backend_address_pool {
     name = local.http_setting_name
-    # ip_addresses = [ azurerm_network_interface.ex1-nic-vm. ] # doing this with another resource
+    # ip_addresses = [ azurerm_network_interface.ex1_nic_vm. ] # doing this with another resource
   }
   backend_http_settings {
     name                  = local.http_setting_name
@@ -324,8 +324,8 @@ resource "azurerm_application_gateway" "ex1-app-gw" {
   }
   http_listener {
     name                           = local.listener_name
-    frontend_ip_configuration_name = "${var.rg-name}-app-gw-front-ip-name"
-    frontend_port_name             = "${var.rg-name}-app-gw-front-port-name"
+    frontend_ip_configuration_name = "${var.rg_name}_app_gw_front_ip_name"
+    frontend_port_name             = "${var.rg_name}_app_gw_front_port_name"
     protocol                       = "Https"
     ssl_certificate_name           = local.cert_tls_ssl
   }
@@ -342,23 +342,23 @@ resource "azurerm_application_gateway" "ex1-app-gw" {
 
   identity {
     type         = "UserAssigned"
-    identity_ids = [data.azurerm_user_assigned_identity.data-ex1-app-gw-ass-iden.id]
+    identity_ids = [data.azurerm_user_assigned_identity.data_ex1_app_gw_ass_iden.id]
   }
 
   #ensuring the cert is ready to be utilized
-  depends_on = [azurerm_key_vault.ex1-akv, azurerm_user_assigned_identity.ex1-app-gw-ass-iden, azurerm_key_vault_certificate.ex1-cert-appgw]
+  depends_on = [azurerm_key_vault.ex1_akv, azurerm_user_assigned_identity.ex1_app_gw_ass_iden, azurerm_key_vault_certificate.ex1_cert_appgw]
 }
 
-resource "azurerm_network_interface_application_gateway_backend_address_pool_association" "ex1-app-gw-nic-asso" {
-  network_interface_id    = azurerm_network_interface.ex1-nic-vm.id
-  ip_configuration_name   = "${var.rg-name}-vm-nic-app-gw-asso"
-  backend_address_pool_id = tolist(azurerm_application_gateway.ex1-app-gw.backend_address_pool).0.id
+resource "azurerm_network_interface_application_gateway_backend_address_pool_association" "ex1_app_gw_nic_asso" {
+  network_interface_id    = azurerm_network_interface.ex1_nic_vm.id
+  ip_configuration_name   = "${var.rg_name}_vm_nic_app_gw_asso"
+  backend_address_pool_id = tolist(azurerm_application_gateway.ex1_app_gw.backend_address_pool).0.id
 }
 
 
-#------------------------ AKV associated resources ----------------------------------------------
-resource "azurerm_key_vault" "ex1-akv" {
-  name                      = "${var.rg-name}-akv-876987"
+#________________________ AKV associated resources ______________________________________________
+resource "azurerm_key_vault" "ex1_akv" {
+  name                      = "${var.rg_name}-akv-876987"
   resource_group_name       = azurerm_resource_group.ex1.name
   location                  = azurerm_resource_group.ex1.location
   sku_name                  = "standard"
@@ -366,37 +366,39 @@ resource "azurerm_key_vault" "ex1-akv" {
   enable_rbac_authorization = true
 }
 
-data "azurerm_role_definition" "keyvault-cert-user" {
+data "azurerm_role_definition" "keyvault_cert_user" {
   name = "Key Vault Certificate User"
 }
 
-resource "azurerm_role_assignment" "app-gw-kv-role" {
-  scope                = azurerm_key_vault.ex1-akv.id
-  role_definition_name = data.azurerm_role_definition.keyvault-cert-user.name
-  principal_id         = azurerm_user_assigned_identity.ex1-app-gw-ass-iden.principal_id
+resource "azurerm_role_assignment" "app_gw_kv_role" {
+  scope                = azurerm_key_vault.ex1_akv.id
+  role_definition_name = data.azurerm_role_definition.keyvault_cert_user.name
+  principal_id         = azurerm_user_assigned_identity.ex1_app_gw_ass_iden.principal_id
 }
 
-data "azurerm_resource_group" "rg-name" {
-  name = var.rg-name
-}
-
-resource "azurerm_role_assignment" "client-role" {
-  scope                = data.azurerm_resource_group.rg-name.id
-  role_definition_name = "Contributor"
+resource "azurerm_role_assignment" "client_role_certs" {
+  scope                = azurerm_key_vault.ex1_akv.id
+  role_definition_name = "Key Vault Certificates Officer"
   principal_id         = data.azurerm_client_config.current.object_id
 }
 
-resource "azurerm_key_vault_secret" "ex1-akv-db-secret" {
-  name         = "${var.rg-name}-db-secret"
-  value        = azurerm_mssql_server.ex1-sql-server.administrator_login_password
-  key_vault_id = azurerm_key_vault.ex1-akv.id
-  # to ensure the connection secret string is created after the value is generated
-  depends_on = [azurerm_mssql_database.ex1-sql-db]
+resource "azurerm_role_assignment" "client_role_secrets" {
+  scope                = azurerm_key_vault.ex1_akv.id
+  role_definition_name = "Key Vault Secrets Officer"
+  principal_id         = data.azurerm_client_config.current.object_id
 }
 
-resource "azurerm_key_vault_certificate" "ex1-cert-appgw" {
-  name         = "${var.rg-name}-cert-appgw"
-  key_vault_id = azurerm_key_vault.ex1-akv.id
+resource "azurerm_key_vault_secret" "ex1_akv_db_secret" {
+  name         = "${var.rg_name}-db-secret"
+  value        = azurerm_mssql_server.ex1_sql_server.administrator_login_password
+  key_vault_id = azurerm_key_vault.ex1_akv.id
+  # to ensure the connection secret string is created after the value is generated
+  depends_on = [azurerm_mssql_database.ex1_sql_db]
+}
+
+resource "azurerm_key_vault_certificate" "ex1_cert_appgw" {
+  name         = "${var.rg_name}-cert-appgw"
+  key_vault_id = azurerm_key_vault.ex1_akv.id
 
   certificate_policy {
     issuer_parameters {

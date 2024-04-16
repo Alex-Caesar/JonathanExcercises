@@ -1,25 +1,25 @@
-variable "rg-name" {
+variable "rg_name" {
   type        = string
   default     = "exercise1"
   description = "The name to give the resource group that will be cat for other resource names."
   sensitive   = false
 }
 
-variable "rg-location" {
+variable "rg_location" {
   type        = string
   default     = "westus"
   description = "The location of the resource group and subsequent assets or resources."
   sensitive   = false
 }
 
-variable "db-admin" {
+variable "db_admin" {
   type        = string
   default     = "dbadmin"
   description = "The username for the msSQL server"
   sensitive   = true
 }
 
-variable "db-password" {
+variable "db_password" {
   type        = string
   default     = "Complex6DbPassw0rd!"
   description = "The passqord for the msSQL server"
@@ -33,14 +33,14 @@ variable "vm_name" {
   sensitive   = false
 }
 
-variable "vm-admin" {
+variable "vm_admin" {
   type        = string
   default     = "vmadmin"
   description = "The username for the vm"
   sensitive   = true
 }
 
-variable "vm-password" {
+variable "vm_password" {
   type        = string
   default     = "Complex6VmPassw0rd!"
   description = "The passqord for the vm"
