@@ -362,7 +362,7 @@ resource "azurerm_application_gateway" "ex1-app-gw" {
 
   identity {
     type         = "UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.ex1-app-gw-ass-iden.id]
+    identity_ids = [azurerm_user_assigned_identity.ex1-app-gw-ass-iden.principal_id]
   }
 
   #ensuring the cert is ready to be utilized
