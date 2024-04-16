@@ -84,8 +84,8 @@ resource "azurerm_private_endpoint" "ex1-redis-private-end" {
   private_service_connection {
     name                           = "${var.rg-name}-redis-private-serv-conn"
     private_connection_resource_id = azurerm_redis_cache.ex1-vm-redis.id
-    # subresource_names = [  ] # not sure
-    is_manual_connection = false
+    subresource_names              = ["redisCache"]
+    is_manual_connection           = false
   }
 
   private_dns_zone_group {
@@ -154,6 +154,7 @@ resource "azurerm_redis_cache" "ex1-vm-redis" {
   family                        = "C"
   sku_name                      = "Basic"
   public_network_access_enabled = false
+  subnet_id                     = azurerm_subnet.ex1-subnet-pe.id
 }
 
 # ************************** VM associated resources *******************************************
@@ -228,6 +229,10 @@ resource "azurerm_virtual_machine" "ex1-vm" {
     offer     = "UbuntuServer"
     sku       = "18.04-LTS"
     version   = "latest"
+  }
+
+  os_profile_linux_config {
+    disable_password_authentication = false
   }
 
 }
@@ -357,7 +362,7 @@ resource "azurerm_application_gateway" "ex1-app-gw" {
 
   identity {
     type         = "UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.ex1-app-gw-ass-iden.principal_id]
+    identity_ids = [azurerm_user_assigned_identity.ex1-app-gw-ass-iden.id]
   }
 
   #ensuring the cert is ready to be utilized
@@ -373,7 +378,7 @@ resource "azurerm_network_interface_application_gateway_backend_address_pool_ass
 
 #------------------------ AKV associated resources ----------------------------------------------
 resource "azurerm_key_vault" "ex1-akv" {
-  name                      = "${var.rg-name}-akv"
+  name                      = "${var.rg-name}-akv-876987"
   resource_group_name       = azurerm_resource_group.ex1.name
   location                  = azurerm_resource_group.ex1.location
   sku_name                  = "standard"
