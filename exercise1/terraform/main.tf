@@ -69,7 +69,7 @@ resource "azurerm_private_dns_zone" "ex1-priv-dns-zone" {
 resource "azurerm_private_dns_zone_virtual_network_link" "ex1-priv-dns-z-net-link" {
   name                = "${var.rg-name}-priv-dns-z-net-link"
   resource_group_name = azurerm_resource_group.ex1.name
-
+  registration_enabled = true
   private_dns_zone_name = azurerm_private_dns_zone.ex1-priv-dns-zone.name
   virtual_network_id    = azurerm_virtual_network.ex1-vnet.id
 }
@@ -154,7 +154,6 @@ resource "azurerm_redis_cache" "ex1-vm-redis" {
   family                        = "C"
   sku_name                      = "Basic"
   public_network_access_enabled = false
-  subnet_id                     = azurerm_subnet.ex1-subnet-pe.id
 }
 
 # ************************** VM associated resources *******************************************
@@ -214,7 +213,6 @@ resource "azurerm_virtual_machine" "ex1-vm" {
     name          = "${var.rg-name}-vm-os-disk"
     caching       = "ReadWrite"
     create_option = "fromImage"
-    disk_size_gb  = 4
     os_type       = "Linux"
   }
 
@@ -253,25 +251,6 @@ resource "azurerm_virtual_machine_extension" "example" {
 SETTINGS
 }
 
-# # Provisioner to configure NGINX to listen on port 443
-# resource "null_resource" "nginx_configuration" {
-#   provisioner "remote-exec" {
-#     inline = [
-#       "sudo sed -i 's/listen 80;/listen 443 ssl;/g' /etc/nginx/sites-available/default",
-#       "sudo systemctl restart nginx"
-#     ]
-
-#     connection {
-#       type        = "ssh"
-#       host        = azurerm_public_ip.example.ip_address
-#       user        = "adminuser"
-#       password    = "Password1234!" # Replace with your password or use SSH key
-#     }
-#   }
-
-#   depends_on = [azurerm_virtual_machine_extension.example]
-# }
-
 #--------------------------- App Gateway network resources ------------------------------
 resource "azurerm_subnet" "ex1-subnet-app-gw" {
   name                 = "${var.rg-name}-subnet-app-gw"
@@ -291,6 +270,11 @@ resource "azurerm_network_security_group" "ex1-app-gw" {
 resource "azurerm_user_assigned_identity" "ex1-app-gw-ass-iden" {
   name                = "${var.rg-name}-app-gw-ass-iden"
   location            = azurerm_resource_group.ex1.location
+  resource_group_name = azurerm_resource_group.ex1.name
+}
+
+data "azurerm_user_assigned_identity" "data-ex1-app-gw-ass-iden" {
+  name                = "${var.rg-name}-app-gw-ass-iden"
   resource_group_name = azurerm_resource_group.ex1.name
 }
 
@@ -319,10 +303,6 @@ resource "azurerm_application_gateway" "ex1-app-gw" {
     name                = local.cert_tls_ssl
     key_vault_secret_id = azurerm_key_vault_certificate.ex1-cert-appgw.secret_id
   }
-  # trusted_root_certificate {
-  #   name = local.cert_tls_ssl
-  #   key_vault_secret_id = azurerm_key_vault_certificate.ex1-cert-appgw.secret_id
-  # }
   frontend_ip_configuration {
     name = local.frontend_ip_configuration_name
     # No public ip ?
@@ -362,7 +342,7 @@ resource "azurerm_application_gateway" "ex1-app-gw" {
 
   identity {
     type         = "UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.ex1-app-gw-ass-iden.principal_id]
+    identity_ids = [data.azurerm_user_assigned_identity.data-ex1-app-gw-ass-iden.id]
   }
 
   #ensuring the cert is ready to be utilized
@@ -396,8 +376,12 @@ resource "azurerm_role_assignment" "app-gw-kv-role" {
   principal_id         = azurerm_user_assigned_identity.ex1-app-gw-ass-iden.principal_id
 }
 
+data "azurerm_resource_group" "rg-name" {
+  name = var.rg-name
+}
+
 resource "azurerm_role_assignment" "client-role" {
-  scope                = azurerm_resource_group.ex1.id
+  scope                = data.azurerm_resource_group.rg-name.id
   role_definition_name = "Contributor"
   principal_id         = data.azurerm_client_config.current.object_id
 }
