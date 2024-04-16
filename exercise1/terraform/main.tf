@@ -141,7 +141,7 @@ resource "azurerm_mssql_database" "ex1_sql_db" {
 
   # prevent the possibility of accidental data loss
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false # for the sake of testing
   }
 }
 
@@ -224,8 +224,8 @@ resource "azurerm_virtual_machine" "ex1_vm" {
 
   storage_image_reference {
     publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "18.04_LTS"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts"
     version   = "latest"
   }
 
@@ -308,7 +308,7 @@ resource "azurerm_application_gateway" "ex1_app_gw" {
     # No public ip ?
   }
   frontend_port {
-    name = local.frontend_ip_configuration_name
+    name = local.frontend_port_name
     port = 443
   }
   backend_address_pool {
@@ -324,8 +324,8 @@ resource "azurerm_application_gateway" "ex1_app_gw" {
   }
   http_listener {
     name                           = local.listener_name
-    frontend_ip_configuration_name = "${var.rg_name}_app_gw_front_ip_name"
-    frontend_port_name             = "${var.rg_name}_app_gw_front_port_name"
+    frontend_ip_configuration_name = local.frontend_ip_configuration_name
+    frontend_port_name             = local.frontend_port_name
     protocol                       = "Https"
     ssl_certificate_name           = local.cert_tls_ssl
   }
@@ -393,7 +393,7 @@ resource "azurerm_key_vault_secret" "ex1_akv_db_secret" {
   value        = azurerm_mssql_server.ex1_sql_server.administrator_login_password
   key_vault_id = azurerm_key_vault.ex1_akv.id
   # to ensure the connection secret string is created after the value is generated
-  depends_on = [azurerm_mssql_database.ex1_sql_db]
+  depends_on = [azurerm_mssql_database.ex1_sql_db, azurerm_role_assignment.client_role_certs, azurerm_role_assignment.client_role_secrets]
 }
 
 resource "azurerm_key_vault_certificate" "ex1_cert_appgw" {
@@ -421,5 +421,24 @@ resource "azurerm_key_vault_certificate" "ex1_cert_appgw" {
     secret_properties {
       content_type = "application/x-pkcs12"
     }
+
+    x509_certificate_properties {
+      # Server Authentication = 1.3.6.1.5.5.7.3.1
+      # Client Authentication = 1.3.6.1.5.5.7.3.2
+      extended_key_usage = ["1.3.6.1.5.5.7.3.1"]
+
+      key_usage = [
+        "cRLSign",
+        "dataEncipherment",
+        "digitalSignature",
+        "keyAgreement",
+        "keyCertSign",
+        "keyEncipherment",
+      ]
+
+      subject            = "cn=${var.rg_name}-cert-appgw"
+      validity_in_months = 12
+    }
   }
+  depends_on = [azurerm_role_assignment.client_role_certs, azurerm_role_assignment.client_role_secrets]
 }
