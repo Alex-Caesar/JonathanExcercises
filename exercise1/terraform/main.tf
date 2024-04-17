@@ -57,6 +57,50 @@ resource "azurerm_network_security_group" "ex1_sql_netsecg" {
   resource_group_name = azurerm_resource_group.ex1.name
 }
 
+# the Following two rules are ref from https://learn.microsoft.com/en-us/azure/azure-sql/managed-instance/connectivity-architecture-overview?view=azuresql&tabs=current#:~:text=You%20can%20use%20a%20network%20security%20group%20to%20control%20access%20to%20the%20SQL%20Managed%20Instance%20data%20endpoint%20by%20filtering%20traffic%20on%20port%201433%20and%20ports%2011000%2D11999%20when%20SQL%20Managed%20Instance%20is%20configured%20for%20redirect%20connections.
+resource "azurerm_network_security_rule" "filter1433" {
+  name                        = "filter1433"
+  priority                    = 100
+  direction                   = "Inbound"
+  access                      = "Deny"
+  protocol                    = "*"
+  source_port_range           = "1433"
+  destination_port_range      = "1433"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+  resource_group_name         = azurerm_resource_group.ex1.name
+  network_security_group_name = azurerm_network_security_group.ex1_sql_netsecg.name
+}
+
+resource "azurerm_network_security_rule" "filterRedirect" {
+  name                        = "filterRedirect"
+  priority                    = 100
+  direction                   = "Inbound"
+  access                      = "Deny"
+  protocol                    = "*"
+  source_port_range           = "11000-11999"
+  destination_port_range      = "11000-11999"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+  resource_group_name         = azurerm_resource_group.ex1.name
+  network_security_group_name = azurerm_network_security_group.ex1_sql_netsecg.name
+}
+
+# Deny all inbound traffic not explicitly allowed
+resource "azurerm_network_security_rule" "deny_all_inbound" {
+  name                        = "DenyAllInbound"
+  priority                    = 4096
+  direction                   = "Inbound"
+  access                      = "Deny"
+  protocol                    = "*"
+  source_port_range           = "*"
+  destination_port_range      = "*"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+  resource_group_name         = azurerm_resource_group.ex1.name
+  network_security_group_name = azurerm_network_security_group.ex1_sql_netsecg.name
+}
+
 resource "azurerm_subnet_network_security_group_association" "ex1_secg_asso_pe" {
   subnet_id                 = azurerm_subnet.ex1_subnet_pe.id
   network_security_group_id = azurerm_network_security_group.ex1_sql_netsecg.id
