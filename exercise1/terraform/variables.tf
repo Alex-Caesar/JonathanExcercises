@@ -43,8 +43,56 @@ variable "vm_admin" {
 variable "vm_password" {
   type        = string
   default     = "Complex6VmPassw0rd!"
-  description = "The passqord for the vm"
+  description = "The password for the vm"
   sensitive   = true
+}
+
+variable "vm_size" {
+  type        = string
+  default     = "Standard_B1s"
+  description = "virtual machine vm_size"
+}
+
+variable "vm_create_option" {
+  type        = string
+  default     = "fromImage"
+  description = "virtual machine fromImage"
+}
+
+variable "vm_caching" {
+  type        = string
+  default     = "ReadWrite"
+  description = "virtual machine caching"
+}
+
+variable "vm_os_type" {
+  type        = string
+  default     = "Linux"
+  description = "virtual machine os_type"
+}
+
+variable "vm_publisher" {
+  type        = string
+  default     = "Canonical"
+  description = "virtual machine publisher"
+}
+
+variable "vm_offer" {
+  type        = string
+  default     = "0001-com-ubuntu-server-jammy"
+  description = "virtual machine offer"
+}
+
+variable "vm_sku" {
+  type        = string
+  default     = "22_04-lts"
+  description = "virtual machine sku"
+}
+
+variable "vm_version" {
+  type        = string
+  default     = "latest"
+  description = "virtual machine version"
 }
 
 variable "nginxConfig" {

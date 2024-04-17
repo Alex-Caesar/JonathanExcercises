@@ -70,7 +70,6 @@ resource "azurerm_private_dns_zone" "ex1_priv_dns_zone" {
 resource "azurerm_private_dns_zone_virtual_network_link" "ex1_priv_dns_z_net_link" {
   name                  = "${var.rg_name}_priv_dns_z_net_link"
   resource_group_name   = azurerm_resource_group.ex1.name
-  registration_enabled  = true
   private_dns_zone_name = azurerm_private_dns_zone.ex1_priv_dns_zone.name
   virtual_network_id    = azurerm_virtual_network.ex1_vnet.id
 }
@@ -191,13 +190,13 @@ resource "azurerm_virtual_machine" "ex1_vm" {
 
   network_interface_ids = [azurerm_network_interface.ex1_nic_vm.id]
 
-  vm_size = "Standard_B1s"
+  vm_size = var.vm_size
 
   storage_os_disk {
     name          = "${var.rg_name}_vm_os_disk"
-    caching       = "ReadWrite"
-    create_option = "fromImage"
-    os_type       = "Linux"
+    caching       = var.vm_caching
+    create_option = var.vm_create_option
+    os_type       = var.vm_os_type
   }
 
   os_profile {
@@ -207,10 +206,10 @@ resource "azurerm_virtual_machine" "ex1_vm" {
   }
 
   storage_image_reference {
-    publisher = "Canonical"
-    offer     = "0001-com-ubuntu-server-jammy"
-    sku       = "22_04-lts"
-    version   = "latest"
+    publisher = var.vm_publisher
+    offer     = var.vm_offer
+    sku       = var.vm_sku
+    version   = var.vm_version
   }
 
   os_profile_linux_config {
