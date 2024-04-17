@@ -247,11 +247,11 @@ resource "azurerm_virtual_machine" "ex1_vm" {
 
 # Custom Script Extension to install NGINX and configure it
 resource "azurerm_virtual_machine_extension" "ex1_vm_extension" {
-  name                 = "nginx_setup"
-  virtual_machine_id   = azurerm_virtual_machine.ex1_vm.id
-  publisher            = "Microsoft.Azure.Extensions"
-  type                 = "CustomScript"
-  type_handler_version = "2.0"
+  name                       = "nginx_setup"
+  virtual_machine_id         = azurerm_virtual_machine.ex1_vm.id
+  publisher                  = "Microsoft.Azure.Extensions"
+  type                       = "CustomScript"
+  type_handler_version       = "2.0"
   auto_upgrade_minor_version = true
 
   settings = <<SETTINGS
@@ -260,7 +260,7 @@ resource "azurerm_virtual_machine_extension" "ex1_vm_extension" {
     }
 SETTINGS
 
-depends_on = [ azurerm_virtual_machine.ex1_vm ]
+  depends_on = [azurerm_virtual_machine.ex1_vm]
 }
 
 #___________________________ App Gateway network resources ______________________________
@@ -340,8 +340,8 @@ resource "azurerm_application_gateway" "ex1_app_gw" {
     key_vault_secret_id = azurerm_key_vault_certificate.ex1_cert_appgw.secret_id
   }
   frontend_ip_configuration {
-    name = local.frontend_ip_configuration_name
-    public_ip_address_id =  azurerm_public_ip.ex1_app_gw_pub_ip.id
+    name                 = local.frontend_ip_configuration_name
+    public_ip_address_id = azurerm_public_ip.ex1_app_gw_pub_ip.id
   }
   frontend_port {
     name = local.frontend_port_name
@@ -388,8 +388,6 @@ resource "azurerm_network_interface_application_gateway_backend_address_pool_ass
   network_interface_id    = azurerm_network_interface.ex1_nic_vm.id
   ip_configuration_name   = "${var.rg_name}_vm_nic_app_gw_asso_config"
   backend_address_pool_id = tolist(azurerm_application_gateway.ex1_app_gw.backend_address_pool).0.id
-
-  depends_on = [azurerm_application_gateway.ex1_app_gw]
 }
 
 
