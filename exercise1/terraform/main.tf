@@ -62,15 +62,27 @@ resource "azurerm_subnet_network_security_group_association" "ex1_secg_asso_pe" 
   network_security_group_id = azurerm_network_security_group.ex1_sql_netsecg.id
 }
 
-resource "azurerm_private_dns_zone" "ex1_priv_dns_zone" {
-  name                = "${var.rg_name}.privatelink.database.windows.net"
+resource "azurerm_private_dns_zone" "ex1_priv_dns_zone_sql" {
+  name                = "privatelink.database.windows.net"
   resource_group_name = azurerm_resource_group.ex1.name
 }
 
-resource "azurerm_private_dns_zone_virtual_network_link" "ex1_priv_dns_z_net_link" {
-  name                  = "${var.rg_name}_priv_dns_z_net_link"
+resource "azurerm_private_dns_zone_virtual_network_link" "ex1_priv_dns_z_net_link_sql" {
+  name                  = "${var.rg_name}_priv_dns_z_net_link_sql"
   resource_group_name   = azurerm_resource_group.ex1.name
-  private_dns_zone_name = azurerm_private_dns_zone.ex1_priv_dns_zone.name
+  private_dns_zone_name = azurerm_private_dns_zone.ex1_priv_dns_zone_sql.name
+  virtual_network_id    = azurerm_virtual_network.ex1_vnet.id
+}
+
+resource "azurerm_private_dns_zone" "ex1_priv_dns_zone_redis" {
+  name                = "privatelink.database.windows.net"
+  resource_group_name = azurerm_resource_group.ex1.name
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "ex1_priv_dns_z_net_link_redis" {
+  name                  = "${var.rg_name}_priv_dns_z_net_link_redis"
+  resource_group_name   = azurerm_resource_group.ex1.name
+  private_dns_zone_name = azurerm_private_dns_zone.ex1_priv_dns_zone_redis.name
   virtual_network_id    = azurerm_virtual_network.ex1_vnet.id
 }
 
@@ -83,14 +95,14 @@ resource "azurerm_private_endpoint" "ex1_redis_private_end" {
 
   private_service_connection {
     name                           = "${var.rg_name}_redis_private_serv_conn"
-    private_connection_resource_id = azurerm_redis_cache.ex1_vm_redis.id
+    private_connection_resource_id = azurerm_redis_cache.ex1_redis.id
     subresource_names              = ["redisCache"]
     is_manual_connection           = false
   }
 
   private_dns_zone_group {
     name                 = "${var.rg_name}_private_dns_zg_redis"
-    private_dns_zone_ids = [azurerm_private_dns_zone.ex1_priv_dns_zone.id]
+    private_dns_zone_ids = [azurerm_private_dns_zone.ex1_priv_dns_zone_redis.id]
   }
 }
 
@@ -110,7 +122,7 @@ resource "azurerm_private_endpoint" "ex1_sqldb_private_end" {
 
   private_dns_zone_group {
     name                 = "${var.rg_name}_private_dns_zg_sql"
-    private_dns_zone_ids = [azurerm_private_dns_zone.ex1_priv_dns_zone.id]
+    private_dns_zone_ids = [azurerm_private_dns_zone.ex1_priv_dns_zone_sql.id]
   }
 }
 
@@ -138,7 +150,7 @@ resource "azurerm_mssql_database" "ex1_sql_db" {
 }
 
 #_______________________ Redis Database resources _______________________________________________
-resource "azurerm_redis_cache" "ex1_vm_redis" {
+resource "azurerm_redis_cache" "ex1_redis" {
   name                          = "${var.rg_name}_redis"
   resource_group_name           = azurerm_resource_group.ex1.name
   location                      = azurerm_resource_group.ex1.location
@@ -268,7 +280,7 @@ resource "azurerm_network_security_rule" "https_rule_app_gw" {
   resource_group_name         = azurerm_resource_group.ex1.name
   network_security_group_name = azurerm_network_security_group.ex1_app_gw_netsecg.name
 }
-
+# required ports by application gateway please see https://learn.microsoft.com/en-us/azure/application-gateway/configuration-infrastructure#:~:text=V2%3A%20Ports%2065200%2D65535
 resource "azurerm_network_security_rule" "health_probe_inbound" {
   name                        = "AllowHealthProbe"
   priority                    = 1003
@@ -333,10 +345,7 @@ resource "azurerm_application_gateway" "ex1_app_gw" {
   #   firewall_mode    = "Detection"
   #   rule_set_version = 3.2
   # }
-  trusted_root_certificate {
-    name                = local.cert_tls_ssl
-    key_vault_secret_id = azurerm_key_vault_certificate.ex1_cert_appgw.secret_id
-  }
+
   frontend_ip_configuration {
     name                 = local.frontend_ip_configuration_name
     public_ip_address_id = azurerm_public_ip.ex1_app_gw_pub_ip.id
