@@ -56,7 +56,7 @@ resource "azurerm_network_security_group" "ex1_sql_netsecg" {
   resource_group_name = azurerm_resource_group.ex1.name
 }
 
-resource "azurerm_subnet_network_security_group_association" "ex1_secg_asso" {
+resource "azurerm_subnet_network_security_group_association" "ex1_secg_asso_pe" {
   subnet_id                 = azurerm_subnet.ex1_subnet_pe.id
   network_security_group_id = azurerm_network_security_group.ex1_sql_netsecg.id
 }
@@ -172,6 +172,11 @@ resource "azurerm_network_security_group" "ex1_vm_netsecg" {
   resource_group_name = azurerm_resource_group.ex1.name
 }
 
+resource "azurerm_subnet_network_security_group_association" "ex1_secg_asso_vm" {
+  subnet_id                 = azurerm_subnet.ex1_subnet_vm.id
+  network_security_group_id = azurerm_network_security_group.ex1_vm_netsecg.id
+}
+
 resource "azurerm_network_security_rule" "ex1_netsec_r_vm_443" {
   name                        = "${var.rg_name}_netsec_r_443"
   priority                    = 100
@@ -196,6 +201,11 @@ resource "azurerm_network_interface" "ex1_nic_vm" {
     subnet_id                     = azurerm_subnet.ex1_subnet_vm.id
     private_ip_address_allocation = "Dynamic"
   }
+}
+
+resource "azurerm_network_interface_security_group_association" "ex1_vm_netsecg_nic_asso" {
+  network_interface_id      = azurerm_network_interface.ex1_nic_vm.id
+  network_security_group_id = azurerm_network_security_group.ex1_vm_netsecg.id
 }
 
 #___________________________ VM associated resources ______________________________
@@ -236,20 +246,22 @@ resource "azurerm_virtual_machine" "ex1_vm" {
 }
 
 # Custom Script Extension to install NGINX and configure it
-# resource "azurerm_virtual_machine_extension" "example" {
-#   name                 = "nginx_setup"
-#   virtual_machine_id   = azurerm_virtual_machine.ex1_vm.id
-#   publisher            = "Microsoft.Azure.Extensions"
-#   type                 = "CustomScript"
-#   type_handler_version = "2.0"
+resource "azurerm_virtual_machine_extension" "ex1_vm_extension" {
+  name                 = "nginx_setup"
+  virtual_machine_id   = azurerm_virtual_machine.ex1_vm.id
+  publisher            = "Microsoft.Azure.Extensions"
+  type                 = "CustomScript"
+  type_handler_version = "2.0"
+  auto_upgrade_minor_version = true
 
-#   settings = <<SETTINGS
-#     {
-#         "script": "https://raw.githubusercontent.com/Alex_Caesar/JonathanExercises/exercise1/exercise1/nginxSetup.bash",
-#         "commandToExecute": "bash installNginx.sh"
-#     }
-# SETTINGS
-# }
+  settings = <<SETTINGS
+    {
+        "commandToExecute": " apt-get update &&  apt-get install nginx -y &&  sed -i 's/# listen 443 ssl/listen 443 ssl/g' /etc/nginx/sites-available/default &&  systemctl restart nginx"
+    }
+SETTINGS
+
+depends_on = [ azurerm_virtual_machine.ex1_vm ]
+}
 
 #___________________________ App Gateway network resources ______________________________
 resource "azurerm_subnet" "ex1_subnet_app_gw" {
@@ -259,12 +271,36 @@ resource "azurerm_subnet" "ex1_subnet_app_gw" {
   address_prefixes     = ["10.0.3.0/24"]
 }
 
-resource "azurerm_network_security_group" "ex1_app_gw" {
+resource "azurerm_network_security_group" "ex1_app_gw_netsecg" {
   name                = "${var.rg_name}_app_gw"
   location            = azurerm_resource_group.ex1.location
   resource_group_name = azurerm_resource_group.ex1.name
+}
 
-  # todo allow 80 and 443 for incoming traffic?
+resource "azurerm_subnet_network_security_group_association" "ex1_secg_asso_app_gw" {
+  subnet_id                 = azurerm_subnet.ex1_subnet_pe.id
+  network_security_group_id = azurerm_network_security_group.ex1_sql_netsecg.id
+}
+
+resource "azurerm_network_security_rule" "https_rule" {
+  name                        = "AllowHTTPS"
+  priority                    = 1002
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_range      = "443"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+  resource_group_name         = azurerm_resource_group.ex1.name
+  network_security_group_name = azurerm_network_security_group.ex1_app_gw_netsecg.name
+}
+
+resource "azurerm_public_ip" "ex1_app_gw_pub_ip" {
+  name                = "${var.rg_name}_app_gw_pub_ip"
+  location            = azurerm_resource_group.ex1.location
+  resource_group_name = azurerm_resource_group.ex1.name
+  allocation_method   = "Static"
 }
 
 resource "azurerm_user_assigned_identity" "ex1_app_gw_ass_iden" {
@@ -273,10 +309,10 @@ resource "azurerm_user_assigned_identity" "ex1_app_gw_ass_iden" {
   resource_group_name = azurerm_resource_group.ex1.name
 }
 
-data "azurerm_user_assigned_identity" "data_ex1_app_gw_ass_iden" {
-  name                = "${var.rg_name}_app_gw_ass_iden"
-  resource_group_name = azurerm_resource_group.ex1.name
-}
+# data "azurerm_user_assigned_identity" "data_ex1_app_gw_ass_iden" {
+#   name                = "${var.rg_name}_app_gw_ass_iden"
+#   resource_group_name = azurerm_resource_group.ex1.name
+# }
 
 resource "azurerm_application_gateway" "ex1_app_gw" {
   name                = "${var.rg_name}_app_gw"
@@ -305,15 +341,14 @@ resource "azurerm_application_gateway" "ex1_app_gw" {
   }
   frontend_ip_configuration {
     name = local.frontend_ip_configuration_name
-    # No public ip ?
+    public_ip_address_id =  azurerm_public_ip.ex1_app_gw_pub_ip.id
   }
   frontend_port {
     name = local.frontend_port_name
     port = 443
   }
   backend_address_pool {
-    name = local.http_setting_name
-    # ip_addresses = [ azurerm_network_interface.ex1_nic_vm. ] # doing this with another resource
+    name = local.backend_address_pool_name
   }
   backend_http_settings {
     name                  = local.http_setting_name
@@ -342,7 +377,7 @@ resource "azurerm_application_gateway" "ex1_app_gw" {
 
   identity {
     type         = "UserAssigned"
-    identity_ids = [data.azurerm_user_assigned_identity.data_ex1_app_gw_ass_iden.id]
+    identity_ids = [azurerm_user_assigned_identity.ex1_app_gw_ass_iden.id]
   }
 
   #ensuring the cert is ready to be utilized
@@ -353,6 +388,8 @@ resource "azurerm_network_interface_application_gateway_backend_address_pool_ass
   network_interface_id    = azurerm_network_interface.ex1_nic_vm.id
   ip_configuration_name   = "${var.rg_name}_vm_nic_app_gw_asso"
   backend_address_pool_id = tolist(azurerm_application_gateway.ex1_app_gw.backend_address_pool).0.id
+
+  depends_on = [azurerm_application_gateway.ex1_app_gw]
 }
 
 
