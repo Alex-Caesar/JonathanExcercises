@@ -118,14 +118,6 @@ resource "azurerm_private_endpoint" "ex1_sqldb_private_end" {
 # ********************** Database associated resources **************************************************
 
 #_______________________ SQL Database resources _______________________________________________
-resource "azurerm_storage_account" "ex1_store_acc" {
-  name                     = "${var.rg_name}store9acc"
-  resource_group_name      = azurerm_resource_group.ex1.name
-  location                 = azurerm_resource_group.ex1.location
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
-}
-
 resource "azurerm_mssql_server" "ex1_sql_server" {
   name                = "${var.rg_name}sqlserver"
   resource_group_name = azurerm_resource_group.ex1.name
@@ -178,20 +170,6 @@ resource "azurerm_subnet_network_security_group_association" "ex1_secg_asso_vm" 
   network_security_group_id = azurerm_network_security_group.ex1_vm_netsecg.id
 }
 
-resource "azurerm_network_security_rule" "ex1_netsec_r_vm_443" {
-  name                        = "${var.rg_name}_netsec_r_443"
-  priority                    = 100
-  direction                   = "Inbound"
-  access                      = "Allow"
-  protocol                    = "Tcp"
-  source_port_range           = "443"
-  destination_port_range      = "443"
-  source_address_prefix       = "*"
-  destination_address_prefix  = "*"
-  resource_group_name         = azurerm_resource_group.ex1.name
-  network_security_group_name = azurerm_network_security_group.ex1_vm_netsecg.name
-}
-
 resource "azurerm_network_interface" "ex1_nic_vm" {
   name                = "${var.rg_name}_nic_vm"
   resource_group_name = azurerm_resource_group.ex1.name
@@ -202,11 +180,6 @@ resource "azurerm_network_interface" "ex1_nic_vm" {
     subnet_id                     = azurerm_subnet.ex1_subnet_vm.id
     private_ip_address_allocation = "Dynamic"
   }
-}
-
-resource "azurerm_network_interface_security_group_association" "ex1_vm_netsecg_nic_asso" {
-  network_interface_id      = azurerm_network_interface.ex1_nic_vm.id
-  network_security_group_id = azurerm_network_security_group.ex1_vm_netsecg.id
 }
 
 #___________________________ VM associated resources ______________________________
@@ -427,13 +400,9 @@ resource "azurerm_key_vault" "ex1_akv" {
   enable_rbac_authorization = true
 }
 
-data "azurerm_role_definition" "keyvault_cert_user" {
-  name = "Key Vault Certificate User"
-}
-
 resource "azurerm_role_assignment" "app_gw_kv_role" {
   scope                = azurerm_key_vault.ex1_akv.id
-  role_definition_name = data.azurerm_role_definition.keyvault_cert_user.name
+  role_definition_name = "Key Vault Certificate User"
   principal_id         = azurerm_user_assigned_identity.ex1_app_gw_ass_iden.principal_id
 }
 
