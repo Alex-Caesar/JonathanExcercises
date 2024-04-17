@@ -27,6 +27,7 @@ locals {
   request_routing_rule_name      = "${azurerm_virtual_network.ex1_vnet.name}-rqrt"
   redirect_configuration_name    = "${azurerm_virtual_network.ex1_vnet.name}-rdrcfg"
   cert_tls_ssl                   = "${var.rg_name}_app_gw_cert"
+  vm_nic_ip_name                 = "${var.rg_name}_nic_vm_ip"
 }
 
 #______________________________ Base resources ________________________________________________________
@@ -74,25 +75,25 @@ resource "azurerm_private_dns_zone_virtual_network_link" "ex1_priv_dns_z_net_lin
   virtual_network_id    = azurerm_virtual_network.ex1_vnet.id
 }
 
-# resource "azurerm_private_endpoint" "ex1_redis_private_end" {
-#   name                = "${var.rg_name}_redis_private_end"
-#   resource_group_name = azurerm_resource_group.ex1.name
-#   location            = azurerm_resource_group.ex1.location
+resource "azurerm_private_endpoint" "ex1_redis_private_end" {
+  name                = "${var.rg_name}_redis_private_end"
+  resource_group_name = azurerm_resource_group.ex1.name
+  location            = azurerm_resource_group.ex1.location
 
-#   subnet_id = azurerm_subnet.ex1_subnet_pe.id
+  subnet_id = azurerm_subnet.ex1_subnet_pe.id
 
-#   private_service_connection {
-#     name                           = "${var.rg_name}_redis_private_serv_conn"
-#     private_connection_resource_id = azurerm_redis_cache.ex1_vm_redis.id
-#     subresource_names              = ["redisCache"]
-#     is_manual_connection           = false
-#   }
+  private_service_connection {
+    name                           = "${var.rg_name}_redis_private_serv_conn"
+    private_connection_resource_id = azurerm_redis_cache.ex1_vm_redis.id
+    subresource_names              = ["redisCache"]
+    is_manual_connection           = false
+  }
 
-#   private_dns_zone_group {
-#     name                 = "${var.rg_name}_private_dns_zg_redis"
-#     private_dns_zone_ids = [azurerm_private_dns_zone.ex1_priv_dns_zone.id]
-#   }
-# }
+  private_dns_zone_group {
+    name                 = "${var.rg_name}_private_dns_zg_redis"
+    private_dns_zone_ids = [azurerm_private_dns_zone.ex1_priv_dns_zone.id]
+  }
+}
 
 resource "azurerm_private_endpoint" "ex1_sqldb_private_end" {
   name                = "${var.rg_name}_sql_private_end"
@@ -146,15 +147,15 @@ resource "azurerm_mssql_database" "ex1_sql_db" {
 }
 
 #_______________________ Redis Database resources _______________________________________________
-# resource "azurerm_redis_cache" "ex1_vm_redis" {
-#   name                          = "${var.rg_name}_redis"
-#   resource_group_name           = azurerm_resource_group.ex1.name
-#   location                      = azurerm_resource_group.ex1.location
-#   capacity                      = 1
-#   family                        = "C"
-#   sku_name                      = "Basic"
-#   public_network_access_enabled = false
-# }
+resource "azurerm_redis_cache" "ex1_vm_redis" {
+  name                          = "${var.rg_name}_redis"
+  resource_group_name           = azurerm_resource_group.ex1.name
+  location                      = azurerm_resource_group.ex1.location
+  capacity                      = 1
+  family                        = "C"
+  sku_name                      = "Basic"
+  public_network_access_enabled = false
+}
 
 # ************************** VM associated resources *******************************************
 
@@ -197,7 +198,7 @@ resource "azurerm_network_interface" "ex1_nic_vm" {
   location            = azurerm_resource_group.ex1.location
 
   ip_configuration {
-    name                          = "${var.rg_name}_nic_vm_ip"
+    name                          = local.vm_nic_ip_name
     subnet_id                     = azurerm_subnet.ex1_subnet_vm.id
     private_ip_address_allocation = "Dynamic"
   }
@@ -245,23 +246,23 @@ resource "azurerm_virtual_machine" "ex1_vm" {
 
 }
 
-# # Custom Script Extension to install NGINX and configure it
-# resource "azurerm_virtual_machine_extension" "ex1_vm_extension" {
-#   name                       = "nginx_setup"
-#   virtual_machine_id         = azurerm_virtual_machine.ex1_vm.id
-#   publisher                  = "Microsoft.Azure.Extensions"
-#   type                       = "CustomScript"
-#   type_handler_version       = "2.0"
-#   auto_upgrade_minor_version = true
+# Custom Script Extension to install NGINX and configure it
+resource "azurerm_virtual_machine_extension" "ex1_vm_extension" {
+  name                       = "nginx_setup"
+  virtual_machine_id         = azurerm_virtual_machine.ex1_vm.id
+  publisher                  = "Microsoft.Azure.Extensions"
+  type                       = "CustomScript"
+  type_handler_version       = "2.0"
+  auto_upgrade_minor_version = true
 
-#   settings = <<SETTINGS
-#     {
-#         "commandToExecute": " apt-get update &&  apt-get install nginx -y &&  sed -i 's/# listen 443 ssl/listen 443 ssl/g' /etc/nginx/sites-available/default &&  systemctl restart nginx"
-#     }
-# SETTINGS
+  settings = <<SETTINGS
+    {
+        "commandToExecute": " apt-get update &&  apt-get install nginx -y &&  sed -i 's/# listen 443 ssl/listen 443 ssl/g' /etc/nginx/sites-available/default &&  systemctl restart nginx"
+    }
+SETTINGS
 
-#   depends_on = [azurerm_virtual_machine.ex1_vm]
-# }
+  depends_on = [azurerm_virtual_machine.ex1_vm]
+}
 
 #___________________________ App Gateway network resources ______________________________
 resource "azurerm_subnet" "ex1_subnet_app_gw" {
@@ -296,7 +297,6 @@ resource "azurerm_network_security_rule" "https_rule_app_gw" {
   network_security_group_name = azurerm_network_security_group.ex1_app_gw_netsecg.name
 }
 
-# Allow inbound traffic on port 65503-65534 for Application Gateway health probes
 resource "azurerm_network_security_rule" "health_probe_inbound" {
   name                        = "AllowHealthProbe"
   priority                    = 1003
@@ -331,7 +331,7 @@ resource "azurerm_public_ip" "ex1_app_gw_pub_ip" {
   location            = azurerm_resource_group.ex1.location
   resource_group_name = azurerm_resource_group.ex1.name
   allocation_method   = "Static"
-  sku = "Standard"
+  sku                 = "Standard"
 }
 
 resource "azurerm_user_assigned_identity" "ex1_app_gw_ass_iden" {
@@ -361,7 +361,7 @@ resource "azurerm_application_gateway" "ex1_app_gw" {
   #   firewall_mode    = "Detection"
   #   rule_set_version = 3.2
   # }
-  ssl_certificate {
+  trusted_root_certificate {
     name                = local.cert_tls_ssl
     key_vault_secret_id = azurerm_key_vault_certificate.ex1_cert_appgw.secret_id
   }
@@ -412,7 +412,7 @@ resource "azurerm_application_gateway" "ex1_app_gw" {
 
 resource "azurerm_network_interface_application_gateway_backend_address_pool_association" "ex1_app_gw_nic_asso" {
   network_interface_id    = azurerm_network_interface.ex1_nic_vm.id
-  ip_configuration_name   = "${var.rg_name}_vm_nic_app_gw_asso_config"
+  ip_configuration_name   = local.vm_nic_ip_name
   backend_address_pool_id = tolist(azurerm_application_gateway.ex1_app_gw.backend_address_pool).0.id
 }
 
