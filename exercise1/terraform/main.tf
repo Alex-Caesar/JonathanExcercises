@@ -75,7 +75,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "ex1_priv_dns_z_net_lin
 }
 
 resource "azurerm_private_dns_zone" "ex1_priv_dns_zone_redis" {
-  name                = "privatelink.database.windows.net"
+  name                = "privatelink.redis.cache.windows.net"
   resource_group_name = azurerm_resource_group.ex1.name
 }
 
