@@ -383,12 +383,6 @@ resource "azurerm_application_gateway" "ex1_app_gw" {
     name      = "${var.rg_name}_app_gw_ip_config"
     subnet_id = azurerm_subnet.ex1_subnet_app_gw.id
   }
-  # # Bonus attempt
-  # waf_configuration {
-  #   enabled          = true
-  #   firewall_mode    = "Detection"
-  #   rule_set_version = 3.2
-  # }
 
   frontend_ip_configuration {
     name                 = local.frontend_ip_configuration_name
