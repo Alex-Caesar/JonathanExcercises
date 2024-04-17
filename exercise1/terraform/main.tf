@@ -245,23 +245,23 @@ resource "azurerm_virtual_machine" "ex1_vm" {
 
 }
 
-# Custom Script Extension to install NGINX and configure it
-resource "azurerm_virtual_machine_extension" "ex1_vm_extension" {
-  name                       = "nginx_setup"
-  virtual_machine_id         = azurerm_virtual_machine.ex1_vm.id
-  publisher                  = "Microsoft.Azure.Extensions"
-  type                       = "CustomScript"
-  type_handler_version       = "2.0"
-  auto_upgrade_minor_version = true
+# # Custom Script Extension to install NGINX and configure it
+# resource "azurerm_virtual_machine_extension" "ex1_vm_extension" {
+#   name                       = "nginx_setup"
+#   virtual_machine_id         = azurerm_virtual_machine.ex1_vm.id
+#   publisher                  = "Microsoft.Azure.Extensions"
+#   type                       = "CustomScript"
+#   type_handler_version       = "2.0"
+#   auto_upgrade_minor_version = true
 
-  settings = <<SETTINGS
-    {
-        "commandToExecute": " apt-get update &&  apt-get install nginx -y &&  sed -i 's/# listen 443 ssl/listen 443 ssl/g' /etc/nginx/sites-available/default &&  systemctl restart nginx"
-    }
-SETTINGS
+#   settings = <<SETTINGS
+#     {
+#         "commandToExecute": " apt-get update &&  apt-get install nginx -y &&  sed -i 's/# listen 443 ssl/listen 443 ssl/g' /etc/nginx/sites-available/default &&  systemctl restart nginx"
+#     }
+# SETTINGS
 
-  depends_on = [azurerm_virtual_machine.ex1_vm]
-}
+#   depends_on = [azurerm_virtual_machine.ex1_vm]
+# }
 
 #___________________________ App Gateway network resources ______________________________
 resource "azurerm_subnet" "ex1_subnet_app_gw" {
@@ -278,11 +278,11 @@ resource "azurerm_network_security_group" "ex1_app_gw_netsecg" {
 }
 
 resource "azurerm_subnet_network_security_group_association" "ex1_secg_asso_app_gw" {
-  subnet_id                 = azurerm_subnet.ex1_subnet_pe.id
-  network_security_group_id = azurerm_network_security_group.ex1_sql_netsecg.id
+  subnet_id                 = azurerm_subnet.ex1_subnet_app_gw.id
+  network_security_group_id = azurerm_network_security_group.ex1_app_gw_netsecg.id
 }
 
-resource "azurerm_network_security_rule" "https_rule" {
+resource "azurerm_network_security_rule" "https_rule_app_gw" {
   name                        = "AllowHTTPS"
   priority                    = 1002
   direction                   = "Inbound"
@@ -296,11 +296,42 @@ resource "azurerm_network_security_rule" "https_rule" {
   network_security_group_name = azurerm_network_security_group.ex1_app_gw_netsecg.name
 }
 
+# Allow inbound traffic on port 65503-65534 for Application Gateway health probes
+resource "azurerm_network_security_rule" "health_probe_inbound" {
+  name                        = "AllowHealthProbe"
+  priority                    = 1003
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_range      = "65200-65535"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+  resource_group_name         = azurerm_resource_group.ex1.name
+  network_security_group_name = azurerm_network_security_group.ex1_app_gw_netsecg.name
+}
+
+# Deny all inbound traffic not explicitly allowed
+resource "azurerm_network_security_rule" "deny_all_inbound" {
+  name                        = "DenyAllInbound"
+  priority                    = 4096
+  direction                   = "Inbound"
+  access                      = "Deny"
+  protocol                    = "*"
+  source_port_range           = "*"
+  destination_port_range      = "*"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+  resource_group_name         = azurerm_resource_group.ex1.name
+  network_security_group_name = azurerm_network_security_group.ex1_app_gw_netsecg.name
+}
+
 resource "azurerm_public_ip" "ex1_app_gw_pub_ip" {
   name                = "${var.rg_name}_app_gw_pub_ip"
   location            = azurerm_resource_group.ex1.location
   resource_group_name = azurerm_resource_group.ex1.name
   allocation_method   = "Static"
+  sku = "Standard"
 }
 
 resource "azurerm_user_assigned_identity" "ex1_app_gw_ass_iden" {
@@ -308,11 +339,6 @@ resource "azurerm_user_assigned_identity" "ex1_app_gw_ass_iden" {
   location            = azurerm_resource_group.ex1.location
   resource_group_name = azurerm_resource_group.ex1.name
 }
-
-# data "azurerm_user_assigned_identity" "data_ex1_app_gw_ass_iden" {
-#   name                = "${var.rg_name}_app_gw_ass_iden"
-#   resource_group_name = azurerm_resource_group.ex1.name
-# }
 
 resource "azurerm_application_gateway" "ex1_app_gw" {
   name                = "${var.rg_name}_app_gw"
@@ -329,12 +355,12 @@ resource "azurerm_application_gateway" "ex1_app_gw" {
     name      = "${var.rg_name}_app_gw_ip_config"
     subnet_id = azurerm_subnet.ex1_subnet_app_gw.id
   }
-  # Bonus attempt
-  waf_configuration {
-    enabled          = true
-    firewall_mode    = "Detection"
-    rule_set_version = 3.2
-  }
+  # # Bonus attempt
+  # waf_configuration {
+  #   enabled          = true
+  #   firewall_mode    = "Detection"
+  #   rule_set_version = 3.2
+  # }
   ssl_certificate {
     name                = local.cert_tls_ssl
     key_vault_secret_id = azurerm_key_vault_certificate.ex1_cert_appgw.secret_id
