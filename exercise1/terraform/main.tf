@@ -383,7 +383,10 @@ resource "azurerm_application_gateway" "ex1_app_gw" {
     name      = "${var.rg_name}_app_gw_ip_config"
     subnet_id = azurerm_subnet.ex1_subnet_app_gw.id
   }
-
+  ssl_certificate {
+    name = "ssl-cert"
+    key_vault_secret_id = azurerm_key_vault_certificate.ex1_cert_appgw.secret_id
+  }
   frontend_ip_configuration {
     name                 = local.frontend_ip_configuration_name
     public_ip_address_id = azurerm_public_ip.ex1_app_gw_pub_ip.id
