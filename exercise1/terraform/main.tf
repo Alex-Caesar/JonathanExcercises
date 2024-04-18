@@ -134,11 +134,11 @@ resource "azurerm_network_security_rule" "filter1433" {
   name                        = "filter1433"
   priority                    = 100
   direction                   = "Inbound"
-  access                      = "Deny"
+  access                      = "Allow"
   protocol                    = "*"
   source_port_range           = "1433"
   destination_port_range      = "1433"
-  source_address_prefix       = "*"
+  source_address_prefixes     = [azurerm_subnet.ex1_subnet_vm.address_prefixes]
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.ex1.name
   network_security_group_name = azurerm_network_security_group.ex1_sql_netsecg.name
@@ -148,26 +148,11 @@ resource "azurerm_network_security_rule" "filterRedirect" {
   name                        = "filterRedirect"
   priority                    = 101
   direction                   = "Inbound"
-  access                      = "Deny"
+  access                      = "Allow"
   protocol                    = "*"
   source_port_range           = "11000-11999"
   destination_port_range      = "11000-11999"
-  source_address_prefix       = "*"
-  destination_address_prefix  = "*"
-  resource_group_name         = azurerm_resource_group.ex1.name
-  network_security_group_name = azurerm_network_security_group.ex1_sql_netsecg.name
-}
-
-# Deny all inbound traffic not explicitly allowed
-resource "azurerm_network_security_rule" "deny_all_inbound_sql" {
-  name                        = "DenyAllInbound"
-  priority                    = 4096
-  direction                   = "Inbound"
-  access                      = "Deny"
-  protocol                    = "*"
-  source_port_range           = "*"
-  destination_port_range      = "*"
-  source_address_prefix       = "*" # todo
+  source_address_prefixes     = [azurerm_subnet.ex1_subnet_pe.address_prefixes]
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.ex1.name
   network_security_group_name = azurerm_network_security_group.ex1_sql_netsecg.name
@@ -335,7 +320,7 @@ resource "azurerm_network_security_rule" "https_rule_app_gw" {
   protocol                    = "Tcp"
   source_port_range           = "*"
   destination_port_range      = "443"
-  source_address_prefix       = "*"
+  source_address_prefixes     = ["GatewayManager", "AzureLoadBalancer"]
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.ex1.name
   network_security_group_name = azurerm_network_security_group.ex1_app_gw_netsecg.name
@@ -349,22 +334,7 @@ resource "azurerm_network_security_rule" "health_probe_inbound" {
   protocol                    = "Tcp"
   source_port_range           = "*"
   destination_port_range      = "65200-65535"
-  source_address_prefix       = "*"
-  destination_address_prefix  = "*"
-  resource_group_name         = azurerm_resource_group.ex1.name
-  network_security_group_name = azurerm_network_security_group.ex1_app_gw_netsecg.name
-}
-
-# Deny all inbound traffic not explicitly allowed
-resource "azurerm_network_security_rule" "deny_all_inbound_app_gw" {
-  name                        = "DenyAllInbound"
-  priority                    = 4096
-  direction                   = "Inbound"
-  access                      = "Deny"
-  protocol                    = "*"
-  source_port_range           = "*"
-  destination_port_range      = "*"
-  source_address_prefix       = "*"
+  source_address_prefixes     = ["GatewayManager"]
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.ex1.name
   network_security_group_name = azurerm_network_security_group.ex1_app_gw_netsecg.name
