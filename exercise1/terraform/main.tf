@@ -68,38 +68,6 @@ resource "azurerm_private_dns_zone_virtual_network_link" "ex1_priv_dns_z_net_lin
   virtual_network_id    = azurerm_virtual_network.ex1_vnet.id
 }
 
-resource "azurerm_private_dns_zone" "ex1_priv_dns_zone_redis" {
-  name                = "privatelink.redis.cache.windows.net"
-  resource_group_name = azurerm_resource_group.ex1.name
-}
-
-resource "azurerm_private_dns_zone_virtual_network_link" "ex1_priv_dns_z_net_link_redis" {
-  name                  = "${var.rg_name}_priv_dns_z_net_link_redis"
-  resource_group_name   = azurerm_resource_group.ex1.name
-  private_dns_zone_name = azurerm_private_dns_zone.ex1_priv_dns_zone_redis.name
-  virtual_network_id    = azurerm_virtual_network.ex1_vnet.id
-}
-
-resource "azurerm_private_endpoint" "ex1_redis_private_end" {
-  name                = "${var.rg_name}_redis_private_end"
-  resource_group_name = azurerm_resource_group.ex1.name
-  location            = azurerm_resource_group.ex1.location
-
-  subnet_id = azurerm_subnet.ex1_subnet_pe.id
-
-  private_service_connection {
-    name                           = "${var.rg_name}_redis_private_serv_conn"
-    private_connection_resource_id = azurerm_redis_cache.ex1_redis.id
-    subresource_names              = ["redisCache"]
-    is_manual_connection           = false
-  }
-
-  private_dns_zone_group {
-    name                 = "${var.rg_name}_private_dns_zg_redis"
-    private_dns_zone_ids = [azurerm_private_dns_zone.ex1_priv_dns_zone_redis.id]
-  }
-}
-
 resource "azurerm_private_endpoint" "ex1_sqldb_private_end" {
   name                = "${var.rg_name}_sql_private_end"
   resource_group_name = azurerm_resource_group.ex1.name
@@ -119,6 +87,38 @@ resource "azurerm_private_endpoint" "ex1_sqldb_private_end" {
     private_dns_zone_ids = [azurerm_private_dns_zone.ex1_priv_dns_zone_sql.id]
   }
 }
+
+# resource "azurerm_private_dns_zone" "ex1_priv_dns_zone_redis" {
+#   name                = "privatelink.redis.cache.windows.net"
+#   resource_group_name = azurerm_resource_group.ex1.name
+# }
+
+# resource "azurerm_private_dns_zone_virtual_network_link" "ex1_priv_dns_z_net_link_redis" {
+#   name                  = "${var.rg_name}_priv_dns_z_net_link_redis"
+#   resource_group_name   = azurerm_resource_group.ex1.name
+#   private_dns_zone_name = azurerm_private_dns_zone.ex1_priv_dns_zone_redis.name
+#   virtual_network_id    = azurerm_virtual_network.ex1_vnet.id
+# }
+
+# resource "azurerm_private_endpoint" "ex1_redis_private_end" {
+#   name                = "${var.rg_name}_redis_private_end"
+#   resource_group_name = azurerm_resource_group.ex1.name
+#   location            = azurerm_resource_group.ex1.location
+
+#   subnet_id = azurerm_subnet.ex1_subnet_pe.id
+
+#   private_service_connection {
+#     name                           = "${var.rg_name}_redis_private_serv_conn"
+#     private_connection_resource_id = azurerm_redis_cache.ex1_redis.id
+#     subresource_names              = ["redisCache"]
+#     is_manual_connection           = false
+#   }
+
+#   private_dns_zone_group {
+#     name                 = "${var.rg_name}_private_dns_zg_redis"
+#     private_dns_zone_ids = [azurerm_private_dns_zone.ex1_priv_dns_zone_redis.id]
+#   }
+# }
 
 # ********************** Database associated resources **************************************************
 
@@ -194,16 +194,16 @@ resource "azurerm_mssql_database" "ex1_sql_db" {
   }
 }
 
-#_______________________ Redis Database resources _______________________________________________
-resource "azurerm_redis_cache" "ex1_redis" {
-  name                          = "${var.rg_name}-redis"
-  resource_group_name           = azurerm_resource_group.ex1.name
-  location                      = azurerm_resource_group.ex1.location
-  capacity                      = 1
-  family                        = "C"
-  sku_name                      = "Basic"
-  public_network_access_enabled = false
-}
+# #_______________________ Redis Database resources _______________________________________________
+# resource "azurerm_redis_cache" "ex1_redis" {
+#   name                          = "${var.rg_name}-redis"
+#   resource_group_name           = azurerm_resource_group.ex1.name
+#   location                      = azurerm_resource_group.ex1.location
+#   capacity                      = 1
+#   family                        = "C"
+#   sku_name                      = "Basic"
+#   public_network_access_enabled = false
+# }
 
 # ************************** VM associated resources *******************************************
 
@@ -394,7 +394,10 @@ resource "azurerm_application_gateway" "ex1_app_gw" {
     tier     = "Standard_v2"
     capacity = 1
   }
-
+  ssl_certificate {
+    name                = local.cert_tls_ssl
+    key_vault_secret_id = azurerm_key_vault_certificate.ex1_cert_appgw.secret_id
+  }
   gateway_ip_configuration {
     name      = "${var.rg_name}_app_gw_ip_config"
     subnet_id = azurerm_subnet.ex1_subnet_app_gw.id
