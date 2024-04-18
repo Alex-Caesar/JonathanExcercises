@@ -384,7 +384,7 @@ resource "azurerm_application_gateway" "ex1_app_gw" {
     subnet_id = azurerm_subnet.ex1_subnet_app_gw.id
   }
   ssl_certificate {
-    name = "ssl-cert"
+    name = local.cert_tls_ssl
     key_vault_secret_id = azurerm_key_vault_certificate.ex1_cert_appgw.secret_id
   }
   frontend_ip_configuration {
