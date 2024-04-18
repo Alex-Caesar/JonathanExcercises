@@ -408,7 +408,7 @@ resource "azurerm_application_gateway" "ex1_app_gw" {
   }
   frontend_port {
     name = local.frontend_port_name
-    port = 80
+    port = 443
   }
   backend_address_pool {
     name = local.backend_address_pool_name
