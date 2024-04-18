@@ -214,7 +214,7 @@ resource "azurerm_network_security_rule" "https_rule_vm" {
   protocol                    = "Tcp"
   source_port_range           = "*"
   destination_port_range      = "443"
-  source_address_prefix       = "*"
+  source_address_prefixes = [ "GatewayManager", "AzureLoadBalancer" ]
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.ex1.name
   network_security_group_name = azurerm_network_security_group.ex1_vm_netsecg.name
