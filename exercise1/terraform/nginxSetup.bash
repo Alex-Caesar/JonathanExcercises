@@ -1,26 +1,10 @@
 #!/bin/bash
 
 # Update package list
-sudo apt update
+sudo apt-get update
 
 # Install Nginx
-sudo apt install -y nginx
-
-# Configure Nginx to respond to port 443
-sudo tee /etc/nginx/sites-available/default <<EOF
-server {
-    listen 443 default_server;
-    server_name _;
-
-    location / {
-        proxy_pass http://localhost:80;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-    }
-}
-EOF
+sudo apt-get install -y nginx
 
 # Create HTML file
 sudo tee /var/www/html/index.html <<EOF
@@ -33,6 +17,21 @@ sudo tee /var/www/html/index.html <<EOF
 <h1>Hello, World!</h1>
 </body>
 </html>
+EOF
+
+# Configure Nginx to respond to port 443
+sudo tee /etc/nginx/sites-available/default <<EOF
+server {
+    listen 80 default_server;
+    server_name _;
+
+    root /var/www/html;
+    index index.html;
+
+    location / {
+        try_files \$uri \$uri/ =404;
+    }
+}
 EOF
 
 # Start Nginx

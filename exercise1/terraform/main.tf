@@ -167,7 +167,7 @@ resource "azurerm_network_security_rule" "deny_all_inbound_sql" {
   protocol                    = "*"
   source_port_range           = "*"
   destination_port_range      = "*"
-  source_address_prefix       = "*"
+  source_address_prefix       = "*" # todo
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.ex1.name
   network_security_group_name = azurerm_network_security_group.ex1_sql_netsecg.name
@@ -219,6 +219,20 @@ resource "azurerm_network_security_group" "ex1_vm_netsecg" {
   name                = "${var.rg_name}_vm_netsecg"
   location            = azurerm_resource_group.ex1.location
   resource_group_name = azurerm_resource_group.ex1.name
+}
+
+resource "azurerm_network_security_rule" "https_rule_vm" {
+  name                        = "AllowHTTPS"
+  priority                    = 100
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_range      = "443"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+  resource_group_name         = azurerm_resource_group.ex1.name
+  network_security_group_name = azurerm_network_security_group.ex1_vm_netsecg.name
 }
 
 resource "azurerm_subnet_network_security_group_association" "ex1_secg_asso_vm" {
@@ -385,17 +399,13 @@ resource "azurerm_application_gateway" "ex1_app_gw" {
     name      = "${var.rg_name}_app_gw_ip_config"
     subnet_id = azurerm_subnet.ex1_subnet_app_gw.id
   }
-  ssl_certificate {
-    name                = local.cert_tls_ssl
-    key_vault_secret_id = azurerm_key_vault_certificate.ex1_cert_appgw.secret_id
-  }
   frontend_ip_configuration {
     name                 = local.frontend_ip_configuration_name
     public_ip_address_id = azurerm_public_ip.ex1_app_gw_pub_ip.id
   }
   frontend_port {
     name = local.frontend_port_name
-    port = 443
+    port = 80
   }
   backend_address_pool {
     name = local.backend_address_pool_name
@@ -416,14 +426,13 @@ resource "azurerm_application_gateway" "ex1_app_gw" {
   }
   request_routing_rule {
     name                       = local.request_routing_rule_name
-    priority                   = 10
+    priority                   = 9
     rule_type                  = "Basic"
     http_listener_name         = local.listener_name
     backend_address_pool_name  = local.backend_address_pool_name
     backend_http_settings_name = local.http_setting_name
   }
 
-  # need a redirect for port 80 or non TSL/SSL traffic ?
 
   identity {
     type         = "UserAssigned"
@@ -437,7 +446,7 @@ resource "azurerm_application_gateway" "ex1_app_gw" {
 resource "azurerm_network_interface_application_gateway_backend_address_pool_association" "ex1_app_gw_nic_asso" {
   network_interface_id    = azurerm_network_interface.ex1_nic_vm.id
   ip_configuration_name   = local.vm_nic_ip_name
-  backend_address_pool_id = tolist(azurerm_application_gateway.ex1_app_gw.backend_address_pool).0.id
+  backend_address_pool_id = one(azurerm_application_gateway.ex1_app_gw.backend_address_pool).id
 }
 
 
