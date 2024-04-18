@@ -214,7 +214,7 @@ resource "azurerm_network_security_rule" "https_rule_vm" {
   protocol                    = "Tcp"
   source_port_range           = "*"
   destination_port_range      = "443"
-  source_address_prefixes = [ "GatewayManager", "AzureLoadBalancer" ]
+  source_address_prefixes     = ["GatewayManager", "AzureLoadBalancer"]
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.ex1.name
   network_security_group_name = azurerm_network_security_group.ex1_vm_netsecg.name
@@ -325,6 +325,21 @@ resource "azurerm_network_security_rule" "https_rule_app_gw" {
   resource_group_name         = azurerm_resource_group.ex1.name
   network_security_group_name = azurerm_network_security_group.ex1_app_gw_netsecg.name
 }
+
+resource "azurerm_network_security_rule" "lb_inbound" {
+  name                        = "AllowLb"
+  priority                    = 1003
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "*"
+  source_port_range           = "*"
+  destination_port_range      = "*"
+  source_address_prefixes     = ["AzureLoadBalancer"]
+  destination_address_prefix  = "*"
+  resource_group_name         = azurerm_resource_group.ex1.name
+  network_security_group_name = azurerm_network_security_group.ex1_app_gw_netsecg.name
+}
+
 # required ports by application gateway please see https://learn.microsoft.com/en-us/azure/application-gateway/configuration-infrastructure#:~:text=V2%3A%20Ports%2065200%2D65535
 resource "azurerm_network_security_rule" "health_probe_inbound" {
   name                        = "AllowHealthProbe"
