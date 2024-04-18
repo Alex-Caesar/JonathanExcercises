@@ -26,8 +26,8 @@ locals {
   listener_name                  = "${azurerm_virtual_network.ex1_vnet.name}-httplstn"
   request_routing_rule_name      = "${azurerm_virtual_network.ex1_vnet.name}-rqrt"
   redirect_configuration_name    = "${azurerm_virtual_network.ex1_vnet.name}-rdrcfg"
-  cert_tls_ssl                   = "${var.rg_name}_app_gw_cert"
-  vm_nic_ip_name                 = "${var.rg_name}_nic_vm_ip"
+  cert_tls_ssl                   = "${var.rg_name}-app-gw-cert"
+  vm_nic_ip_name                 = "${var.rg_name}-nic-vm-ip"
 }
 
 #______________________________ Base resources ________________________________________________________
@@ -285,7 +285,7 @@ resource "azurerm_virtual_machine" "ex1_vm" {
 
 #   settings = <<SETTINGS
 #     {
-#         "commandToExecute": " apt-get update &&  apt-get install nginx -y &&  sed -i 's/# listen 443 ssl/listen 443 ssl/g' /etc/nginx/sites-available/default &&  systemctl restart nginx"
+#         "commandToExecute": "sudo apt-get update && sudo apt-get install nginx -y && sudo sed -i 's/# listen 443 ssl/listen 443 ssl/g' /etc/nginx/sites-available/default && sudo systemctl restart nginx"
 #     }
 # SETTINGS
 
