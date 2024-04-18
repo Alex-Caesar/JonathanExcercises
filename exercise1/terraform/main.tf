@@ -87,7 +87,7 @@ resource "azurerm_network_security_rule" "filterRedirect" {
 }
 
 # Deny all inbound traffic not explicitly allowed
-resource "azurerm_network_security_rule" "deny_all_inbound" {
+resource "azurerm_network_security_rule" "deny_all_inbound_sql" {
   name                        = "DenyAllInbound"
   priority                    = 4096
   direction                   = "Inbound"
@@ -340,7 +340,7 @@ resource "azurerm_network_security_rule" "health_probe_inbound" {
 }
 
 # Deny all inbound traffic not explicitly allowed
-resource "azurerm_network_security_rule" "deny_all_inbound" {
+resource "azurerm_network_security_rule" "deny_all_inbound_app_gw" {
   name                        = "DenyAllInbound"
   priority                    = 4096
   direction                   = "Inbound"
