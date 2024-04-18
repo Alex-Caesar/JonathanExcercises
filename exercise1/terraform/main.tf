@@ -74,7 +74,7 @@ resource "azurerm_network_security_rule" "filter1433" {
 
 resource "azurerm_network_security_rule" "filterRedirect" {
   name                        = "filterRedirect"
-  priority                    = 100
+  priority                    = 101
   direction                   = "Inbound"
   access                      = "Deny"
   protocol                    = "*"
@@ -195,7 +195,7 @@ resource "azurerm_mssql_database" "ex1_sql_db" {
 
 #_______________________ Redis Database resources _______________________________________________
 resource "azurerm_redis_cache" "ex1_redis" {
-  name                          = "${var.rg_name}_redis"
+  name                          = "${var.rg_name}-redis"
   resource_group_name           = azurerm_resource_group.ex1.name
   location                      = azurerm_resource_group.ex1.location
   capacity                      = 1
@@ -274,23 +274,23 @@ resource "azurerm_virtual_machine" "ex1_vm" {
 
 }
 
-# Custom Script Extension to install NGINX and configure it
-resource "azurerm_virtual_machine_extension" "ex1_vm_extension" {
-  name                       = "nginx_setup"
-  virtual_machine_id         = azurerm_virtual_machine.ex1_vm.id
-  publisher                  = "Microsoft.Azure.Extensions"
-  type                       = "CustomScript"
-  type_handler_version       = "2.0"
-  auto_upgrade_minor_version = true
+# # Custom Script Extension to install NGINX and configure it
+# resource "azurerm_virtual_machine_extension" "ex1_vm_extension" {
+#   name                       = "nginx_setup"
+#   virtual_machine_id         = azurerm_virtual_machine.ex1_vm.id
+#   publisher                  = "Microsoft.Azure.Extensions"
+#   type                       = "CustomScript"
+#   type_handler_version       = "2.0"
+#   auto_upgrade_minor_version = true
 
-  settings = <<SETTINGS
-    {
-        "commandToExecute": " apt-get update &&  apt-get install nginx -y &&  sed -i 's/# listen 443 ssl/listen 443 ssl/g' /etc/nginx/sites-available/default &&  systemctl restart nginx"
-    }
-SETTINGS
+#   settings = <<SETTINGS
+#     {
+#         "commandToExecute": " apt-get update &&  apt-get install nginx -y &&  sed -i 's/# listen 443 ssl/listen 443 ssl/g' /etc/nginx/sites-available/default &&  systemctl restart nginx"
+#     }
+# SETTINGS
 
-  depends_on = [azurerm_virtual_machine.ex1_vm]
-}
+#   depends_on = [azurerm_virtual_machine.ex1_vm]
+# }
 
 #___________________________ App Gateway network resources ______________________________
 resource "azurerm_subnet" "ex1_subnet_app_gw" {
@@ -441,7 +441,7 @@ resource "azurerm_network_interface_application_gateway_backend_address_pool_ass
 
 #________________________ AKV associated resources ______________________________________________
 resource "azurerm_key_vault" "ex1_akv" {
-  name                      = "${var.rg_name}-akv-876987"
+  name                      = "${var.rg_name}-akv-555534"
   resource_group_name       = azurerm_resource_group.ex1.name
   location                  = azurerm_resource_group.ex1.location
   sku_name                  = "standard"
