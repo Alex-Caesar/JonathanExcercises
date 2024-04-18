@@ -22,6 +22,22 @@ server {
 }
 EOF
 
+# Create HTML file
+sudo tee /var/www/html/index.html <<EOF
+<!DOCTYPE html>
+<html>
+<head>
+<title>Hello, World!</title>
+</head>
+<body>
+<h1>Hello, World!</h1>
+</body>
+</html>
+EOF
+
+# Start Nginx
+sudo systemctl start nginx
+
 # Test Nginx configuration
 sudo nginx -t
 

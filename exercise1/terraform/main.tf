@@ -51,56 +51,6 @@ resource "azurerm_subnet" "ex1_subnet_pe" {
   address_prefixes     = ["10.0.0.0/24"]
 }
 
-resource "azurerm_network_security_group" "ex1_sql_netsecg" {
-  name                = "${var.rg_name}_pe_netsecg"
-  location            = azurerm_resource_group.ex1.location
-  resource_group_name = azurerm_resource_group.ex1.name
-}
-
-# the Following two rules are ref from https://learn.microsoft.com/en-us/azure/azure-sql/managed-instance/connectivity-architecture-overview?view=azuresql&tabs=current#:~:text=You%20can%20use%20a%20network%20security%20group%20to%20control%20access%20to%20the%20SQL%20Managed%20Instance%20data%20endpoint%20by%20filtering%20traffic%20on%20port%201433%20and%20ports%2011000%2D11999%20when%20SQL%20Managed%20Instance%20is%20configured%20for%20redirect%20connections.
-resource "azurerm_network_security_rule" "filter1433" {
-  name                        = "filter1433"
-  priority                    = 100
-  direction                   = "Inbound"
-  access                      = "Deny"
-  protocol                    = "*"
-  source_port_range           = "1433"
-  destination_port_range      = "1433"
-  source_address_prefix       = "*"
-  destination_address_prefix  = "*"
-  resource_group_name         = azurerm_resource_group.ex1.name
-  network_security_group_name = azurerm_network_security_group.ex1_sql_netsecg.name
-}
-
-resource "azurerm_network_security_rule" "filterRedirect" {
-  name                        = "filterRedirect"
-  priority                    = 101
-  direction                   = "Inbound"
-  access                      = "Deny"
-  protocol                    = "*"
-  source_port_range           = "11000-11999"
-  destination_port_range      = "11000-11999"
-  source_address_prefix       = "*"
-  destination_address_prefix  = "*"
-  resource_group_name         = azurerm_resource_group.ex1.name
-  network_security_group_name = azurerm_network_security_group.ex1_sql_netsecg.name
-}
-
-# Deny all inbound traffic not explicitly allowed
-resource "azurerm_network_security_rule" "deny_all_inbound_sql" {
-  name                        = "DenyAllInbound"
-  priority                    = 4096
-  direction                   = "Inbound"
-  access                      = "Deny"
-  protocol                    = "*"
-  source_port_range           = "*"
-  destination_port_range      = "*"
-  source_address_prefix       = "*"
-  destination_address_prefix  = "*"
-  resource_group_name         = azurerm_resource_group.ex1.name
-  network_security_group_name = azurerm_network_security_group.ex1_sql_netsecg.name
-}
-
 resource "azurerm_subnet_network_security_group_association" "ex1_secg_asso_pe" {
   subnet_id                 = azurerm_subnet.ex1_subnet_pe.id
   network_security_group_id = azurerm_network_security_group.ex1_sql_netsecg.id
@@ -171,6 +121,57 @@ resource "azurerm_private_endpoint" "ex1_sqldb_private_end" {
 }
 
 # ********************** Database associated resources **************************************************
+
+#_______________________ SQL network resources _______________________________________________
+resource "azurerm_network_security_group" "ex1_sql_netsecg" {
+  name                = "${var.rg_name}_pe_netsecg"
+  location            = azurerm_resource_group.ex1.location
+  resource_group_name = azurerm_resource_group.ex1.name
+}
+
+# the Following two rules are ref from https://learn.microsoft.com/en-us/azure/azure-sql/managed-instance/connectivity-architecture-overview?view=azuresql&tabs=current#:~:text=You%20can%20use%20a%20network%20security%20group%20to%20control%20access%20to%20the%20SQL%20Managed%20Instance%20data%20endpoint%20by%20filtering%20traffic%20on%20port%201433%20and%20ports%2011000%2D11999%20when%20SQL%20Managed%20Instance%20is%20configured%20for%20redirect%20connections.
+resource "azurerm_network_security_rule" "filter1433" {
+  name                        = "filter1433"
+  priority                    = 100
+  direction                   = "Inbound"
+  access                      = "Deny"
+  protocol                    = "*"
+  source_port_range           = "1433"
+  destination_port_range      = "1433"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+  resource_group_name         = azurerm_resource_group.ex1.name
+  network_security_group_name = azurerm_network_security_group.ex1_sql_netsecg.name
+}
+
+resource "azurerm_network_security_rule" "filterRedirect" {
+  name                        = "filterRedirect"
+  priority                    = 101
+  direction                   = "Inbound"
+  access                      = "Deny"
+  protocol                    = "*"
+  source_port_range           = "11000-11999"
+  destination_port_range      = "11000-11999"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+  resource_group_name         = azurerm_resource_group.ex1.name
+  network_security_group_name = azurerm_network_security_group.ex1_sql_netsecg.name
+}
+
+# Deny all inbound traffic not explicitly allowed
+resource "azurerm_network_security_rule" "deny_all_inbound_sql" {
+  name                        = "DenyAllInbound"
+  priority                    = 4096
+  direction                   = "Inbound"
+  access                      = "Deny"
+  protocol                    = "*"
+  source_port_range           = "*"
+  destination_port_range      = "*"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+  resource_group_name         = azurerm_resource_group.ex1.name
+  network_security_group_name = azurerm_network_security_group.ex1_sql_netsecg.name
+}
 
 #_______________________ SQL Database resources _______________________________________________
 resource "azurerm_mssql_server" "ex1_sql_server" {
@@ -274,23 +275,23 @@ resource "azurerm_virtual_machine" "ex1_vm" {
 
 }
 
-# # Custom Script Extension to install NGINX and configure it
-# resource "azurerm_virtual_machine_extension" "ex1_vm_extension" {
-#   name                       = "nginx_setup"
-#   virtual_machine_id         = azurerm_virtual_machine.ex1_vm.id
-#   publisher                  = "Microsoft.Azure.Extensions"
-#   type                       = "CustomScript"
-#   type_handler_version       = "2.0"
-#   auto_upgrade_minor_version = true
+# Custom Script Extension to install NGINX and configure it
+resource "azurerm_virtual_machine_extension" "ex1_vm_extension" {
+  name                       = "nginx_setup"
+  virtual_machine_id         = azurerm_virtual_machine.ex1_vm.id
+  publisher                  = "Microsoft.Azure.Extensions"
+  type                       = "CustomScript"
+  type_handler_version       = "2.0"
+  auto_upgrade_minor_version = true
 
-#   settings = <<SETTINGS
-#     {
-#         "commandToExecute": "sudo apt-get update && sudo apt-get install nginx -y && sudo sed -i 's/# listen 443 ssl/listen 443 ssl/g' /etc/nginx/sites-available/default && sudo systemctl restart nginx"
-#     }
-# SETTINGS
+  settings = <<SETTINGS
+    {
+        "script": "${base64encode(file(var.nginxConfig))}"
+    }
+SETTINGS
 
-#   depends_on = [azurerm_virtual_machine.ex1_vm]
-# }
+  depends_on = [azurerm_virtual_machine.ex1_vm]
+}
 
 #___________________________ App Gateway network resources ______________________________
 resource "azurerm_subnet" "ex1_subnet_app_gw" {
@@ -384,7 +385,7 @@ resource "azurerm_application_gateway" "ex1_app_gw" {
     subnet_id = azurerm_subnet.ex1_subnet_app_gw.id
   }
   ssl_certificate {
-    name = local.cert_tls_ssl
+    name                = local.cert_tls_ssl
     key_vault_secret_id = azurerm_key_vault_certificate.ex1_cert_appgw.secret_id
   }
   frontend_ip_configuration {
