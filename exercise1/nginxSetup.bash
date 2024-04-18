@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # Update package list
-apt update
+sudo apt update
 
 # Install Nginx
-apt install -y nginx
+sudo apt install -y nginx
 
 # Configure Nginx to respond to port 443
-tee /etc/nginx/sites-available/default <<EOF
+sudo tee /etc/nginx/sites-available/default <<EOF
 server {
     listen 443 default_server;
     server_name _;
@@ -23,9 +23,9 @@ server {
 EOF
 
 # Test Nginx configuration
-nginx -t
+sudo nginx -t
 
 # Reload Nginx to apply changes
-systemctl reload nginx
+sudo systemctl reload nginx
 
 echo "Nginx installed and configured to respond to port 443."
