@@ -138,7 +138,7 @@ resource "azurerm_network_security_rule" "filter1433" {
   protocol                    = "*"
   source_port_range           = "1433"
   destination_port_range      = "1433"
-  source_address_prefixes     = [azurerm_subnet.ex1_subnet_vm.address_prefixes]
+  source_address_prefix       = azurerm_subnet.ex1_subnet_vm.address_prefixes.0
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.ex1.name
   network_security_group_name = azurerm_network_security_group.ex1_sql_netsecg.name
@@ -152,7 +152,7 @@ resource "azurerm_network_security_rule" "filterRedirect" {
   protocol                    = "*"
   source_port_range           = "11000-11999"
   destination_port_range      = "11000-11999"
-  source_address_prefixes     = [azurerm_subnet.ex1_subnet_pe.address_prefixes]
+  source_address_prefix       = azurerm_subnet.ex1_subnet_pe.address_prefixes.0
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.ex1.name
   network_security_group_name = azurerm_network_security_group.ex1_sql_netsecg.name
@@ -206,7 +206,7 @@ resource "azurerm_network_security_group" "ex1_vm_netsecg" {
   resource_group_name = azurerm_resource_group.ex1.name
 }
 
-resource "azurerm_network_security_rule" "https_rule_vm" {
+resource "azurerm_network_security_rule" "https_rule_vm_gw" {
   name                        = "AllowHTTPS"
   priority                    = 100
   direction                   = "Inbound"
@@ -214,7 +214,21 @@ resource "azurerm_network_security_rule" "https_rule_vm" {
   protocol                    = "Tcp"
   source_port_range           = "*"
   destination_port_range      = "443"
-  source_address_prefixes     = ["GatewayManager", "AzureLoadBalancer"]
+  source_address_prefix       = "GatewayManager"
+  destination_address_prefix  = "*"
+  resource_group_name         = azurerm_resource_group.ex1.name
+  network_security_group_name = azurerm_network_security_group.ex1_vm_netsecg.name
+}
+
+resource "azurerm_network_security_rule" "https_rule_vm_lb" {
+  name                        = "AllowHTTPS"
+  priority                    = 101
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_range      = "443"
+  source_address_prefix       = "AzureLoadBalancer"
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.ex1.name
   network_security_group_name = azurerm_network_security_group.ex1_vm_netsecg.name
@@ -293,7 +307,7 @@ SETTINGS
   depends_on = [azurerm_virtual_machine.ex1_vm]
 }
 
-#___________________________ App Gateway network resources ______________________________
+#___________________________ App Gateway Related resources ______________________________
 resource "azurerm_subnet" "ex1_subnet_app_gw" {
   name                 = "${var.rg_name}_subnet_app_gw"
   resource_group_name  = azurerm_resource_group.ex1.name
@@ -320,7 +334,7 @@ resource "azurerm_network_security_rule" "https_rule_app_gw" {
   protocol                    = "Tcp"
   source_port_range           = "*"
   destination_port_range      = "443"
-  source_address_prefixes     = "*"
+  source_address_prefix       = "*"
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.ex1.name
   network_security_group_name = azurerm_network_security_group.ex1_app_gw_netsecg.name
@@ -328,13 +342,13 @@ resource "azurerm_network_security_rule" "https_rule_app_gw" {
 
 resource "azurerm_network_security_rule" "lb_inbound" {
   name                        = "AllowLb"
-  priority                    = 1003
+  priority                    = 102
   direction                   = "Inbound"
   access                      = "Allow"
   protocol                    = "*"
   source_port_range           = "*"
   destination_port_range      = "*"
-  source_address_prefixes     = ["AzureLoadBalancer"]
+  source_address_prefix       = "AzureLoadBalancer"
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.ex1.name
   network_security_group_name = azurerm_network_security_group.ex1_app_gw_netsecg.name
@@ -343,13 +357,13 @@ resource "azurerm_network_security_rule" "lb_inbound" {
 # required ports by application gateway please see https://learn.microsoft.com/en-us/azure/application-gateway/configuration-infrastructure#:~:text=V2%3A%20Ports%2065200%2D65535
 resource "azurerm_network_security_rule" "health_probe_inbound" {
   name                        = "AllowHealthProbe"
-  priority                    = 1003
+  priority                    = 103
   direction                   = "Inbound"
   access                      = "Allow"
   protocol                    = "Tcp"
   source_port_range           = "*"
   destination_port_range      = "65200-65535"
-  source_address_prefixes     = ["GatewayManager"]
+  source_address_prefix       = "GatewayManager"
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.ex1.name
   network_security_group_name = azurerm_network_security_group.ex1_app_gw_netsecg.name
@@ -493,7 +507,7 @@ resource "azurerm_key_vault_certificate" "ex1_cert_appgw" {
         action_type = "AutoRenew"
       }
       trigger {
-        days_before_expiry = 30
+        days_before_expiry = 33
       }
     }
     secret_properties {
@@ -514,8 +528,8 @@ resource "azurerm_key_vault_certificate" "ex1_cert_appgw" {
         "keyEncipherment",
       ]
 
-      subject            = "cn=${var.rg_name}-cert-appgw"
-      validity_in_months = 12
+      subject            = "cn=${local.cert_tls_ssl}"
+      validity_in_months = 3
     }
   }
   depends_on = [azurerm_role_assignment.client_role_certs, azurerm_role_assignment.client_role_secrets]

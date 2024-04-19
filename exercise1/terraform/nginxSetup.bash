@@ -22,7 +22,7 @@ EOF
 # Configure Nginx to respond to port 443
 sudo tee /etc/nginx/sites-available/default <<EOF
 server {
-    listen 80 default_server;
+    listen 443 default_server;
     server_name _;
 
     root /var/www/html;
