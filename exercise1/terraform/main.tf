@@ -253,45 +253,38 @@ resource "azurerm_network_interface" "ex1_nic_vm" {
 
 #___________________________ VM associated resources ______________________________
 
-resource "azurerm_virtual_machine" "ex1_vm" {
+resource "azurerm_linux_virtual_machine" "ex1_vm" {
   name                = "${var.rg_name}_vm"
   resource_group_name = azurerm_resource_group.ex1.name
   location            = azurerm_resource_group.ex1.location
 
   network_interface_ids = [azurerm_network_interface.ex1_nic_vm.id]
+  size                  = var.vm_size
 
-  vm_size = var.vm_size
-
-  storage_os_disk {
-    name          = "${var.rg_name}_vm_os_disk"
-    caching       = var.vm_caching
-    create_option = var.vm_create_option
-    os_type       = var.vm_os_type
+  os_disk {
+    name                 = "${var.rg_name}_vm_os_disk"
+    caching              = var.vm_caching
+    storage_account_type = var.vm_storage_account_type
   }
 
-  os_profile {
-    admin_username = var.vm_admin
-    admin_password = var.vm_password
-    computer_name  = var.vm_name
-  }
+  admin_username = var.vm_admin
+  admin_password = var.vm_password
+  computer_name  = var.vm_name
 
-  storage_image_reference {
+  source_image_reference {
     publisher = var.vm_publisher
     offer     = var.vm_offer
     sku       = var.vm_sku
     version   = var.vm_version
   }
 
-  os_profile_linux_config {
-    disable_password_authentication = false
-  }
-
+  disable_password_authentication = false
 }
 
 # Custom Script Extension to install NGINX and configure it
-resource "azurerm_virtual_machine_extension" "ex1_vm_extension" {
+resource "azurerm_virtual_machine_extension" "ex1_vm_extension_nginx_setup" {
   name                       = "nginx_setup"
-  virtual_machine_id         = azurerm_virtual_machine.ex1_vm.id
+  virtual_machine_id         = azurerm_linux_virtual_machine.ex1_vm.id
   publisher                  = "Microsoft.Azure.Extensions"
   type                       = "CustomScript"
   type_handler_version       = "2.0"
@@ -304,7 +297,7 @@ resource "azurerm_virtual_machine_extension" "ex1_vm_extension" {
     }
 SETTINGS
 
-  depends_on = [azurerm_virtual_machine.ex1_vm]
+  depends_on = [azurerm_linux_virtual_machine.ex1_vm]
 }
 
 #___________________________ App Gateway Related resources ______________________________

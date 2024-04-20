@@ -53,6 +53,12 @@ variable "vm_size" {
   description = "virtual machine vm_size"
 }
 
+variable "vm_storage_account_type" {
+  type        = string
+  default     = "Standard_LRS"
+  description = "The storagem account type for the vm"
+}
+
 variable "vm_create_option" {
   type        = string
   default     = "fromImage"
@@ -99,4 +105,10 @@ variable "nginxConfig" {
   type        = string
   default     = "nginxSetup.bash"
   description = "A ref to a script that is run on the vm to setup and configure nginx"
+}
+
+variable "web_serve_msg" {
+  type        = string
+  default     = "Welcome :)"
+  description = "Write something fun!"
 }
