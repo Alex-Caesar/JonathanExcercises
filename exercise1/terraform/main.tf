@@ -318,7 +318,9 @@ resource "azurerm_subnet_network_security_group_association" "ex1_secg_asso_app_
   subnet_id                 = azurerm_subnet.ex1_subnet_app_gw.id
   network_security_group_id = azurerm_network_security_group.ex1_app_gw_netsecg.id
 }
+# NSG Rules required ports by application gateway please see https://learn.microsoft.com/en-us/azure/application-gateway/configuration-infrastructure#:~:text=V2%3A%20Ports%2065200%2D65535
 
+# Inbound Client traffic
 resource "azurerm_network_security_rule" "https_rule_app_gw" {
   name                        = "AllowHTTPS"
   priority                    = 100
@@ -327,12 +329,13 @@ resource "azurerm_network_security_rule" "https_rule_app_gw" {
   protocol                    = "Tcp"
   source_port_range           = "*"
   destination_port_range      = "443"
-  source_address_prefix       = "*"
+  source_address_prefixes       = [azurerm_subnet.ex1_subnet_app_gw.address_prefixes]
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.ex1.name
   network_security_group_name = azurerm_network_security_group.ex1_app_gw_netsecg.name
 }
 
+# Inbound Infrastructure Ports
 resource "azurerm_network_security_rule" "lb_inbound" {
   name                        = "AllowLb"
   priority                    = 102
@@ -347,7 +350,6 @@ resource "azurerm_network_security_rule" "lb_inbound" {
   network_security_group_name = azurerm_network_security_group.ex1_app_gw_netsecg.name
 }
 
-# required ports by application gateway please see https://learn.microsoft.com/en-us/azure/application-gateway/configuration-infrastructure#:~:text=V2%3A%20Ports%2065200%2D65535
 resource "azurerm_network_security_rule" "health_probe_inbound" {
   name                        = "AllowHealthProbe"
   priority                    = 103
@@ -357,6 +359,21 @@ resource "azurerm_network_security_rule" "health_probe_inbound" {
   source_port_range           = "*"
   destination_port_range      = "65200-65535"
   source_address_prefix       = "GatewayManager"
+  destination_address_prefix  = "*"
+  resource_group_name         = azurerm_resource_group.ex1.name
+  network_security_group_name = azurerm_network_security_group.ex1_app_gw_netsecg.name
+}
+
+# Outbound rule
+resource "azurerm_network_security_rule" "outbound_internet" {
+  name                        = "outboundInternet"
+  priority                    = 104
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_range      = "*"
+  source_address_prefix       = "*"
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.ex1.name
   network_security_group_name = azurerm_network_security_group.ex1_app_gw_netsecg.name
