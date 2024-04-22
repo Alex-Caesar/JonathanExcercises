@@ -6,6 +6,11 @@ sudo apt-get update
 # Install Nginx
 sudo apt-get install -y nginx
 
+sudo mkdir /etc/nginx/ssl
+
+sudo cp /var/lib/waagent/${CERTNAME}.crt /etc/nginx/ssl/crt.crt
+sudo cp /var/lib/waagent/${CERTNAME}.prv /etc/nginx/ssl/key.key
+
 # Create HTML file
 sudo tee /var/www/html/index.html <<EOF
 <!DOCTYPE html>
@@ -22,8 +27,11 @@ EOF
 # Configure Nginx to respond to port 443
 sudo tee /etc/nginx/sites-available/default <<EOF
 server {
-    listen 443 default_server;
+    listen 443 ssl default_server;
     server_name _;
+
+    ssl_certificate /etc/nginx/ssl/crt.crt;
+    ssl_certificate_key /etc/nginx/ssl/key.key; 
 
     root /var/www/html;
     index index.html;

@@ -36,7 +36,7 @@ locals {
 
 resource "random_integer" "number" {
   min = 1
-  max = 500
+  max = 501
 }
 
 
@@ -68,7 +68,7 @@ resource "azurerm_subnet_network_security_group_association" "ex1_secg_asso_pe" 
 
 # ********************** Database associated resources **************************************************
 
-#_______________________ SQL network resources _______________________________________________
+# _______________________ SQL network resources _______________________________________________
 resource "azurerm_network_security_group" "ex1_sql_netsecg" {
   name                = "${var.rg_name}_pe_netsecg"
   location            = azurerm_resource_group.ex1.location
@@ -218,7 +218,7 @@ resource "azurerm_network_security_group" "ex1_vm_netsecg" {
 }
 
 resource "azurerm_network_security_rule" "https_rule_vm_gw" {
-  name                        = "AllowHTTPS"
+  name                        = "AllowHTTPSGW"
   priority                    = 100
   direction                   = "Inbound"
   access                      = "Allow"
@@ -232,7 +232,7 @@ resource "azurerm_network_security_rule" "https_rule_vm_gw" {
 }
 
 resource "azurerm_network_security_rule" "https_rule_vm_lb" {
-  name                        = "AllowHTTPS"
+  name                        = "AllowHTTPSLB"
   priority                    = 200
   direction                   = "Inbound"
   access                      = "Allow"
@@ -302,9 +302,15 @@ resource "azurerm_linux_virtual_machine" "ex1_vm" {
     storage_account_type = var.vm_storage_account_type
   }
 
+  computer_name = var.vm_name
+
   admin_username = var.vm_admin
   admin_password = var.vm_password
-  computer_name  = var.vm_name
+
+  # admin_ssh_key {
+  #   username   = var.vm_admin
+  #   public_key = file("./vm.pub")
+  # }
 
   source_image_reference {
     publisher = var.vm_publisher
@@ -313,10 +319,51 @@ resource "azurerm_linux_virtual_machine" "ex1_vm" {
     version   = var.vm_version
   }
 
+  secret {
+    certificate {
+      url = azurerm_key_vault_certificate.ex1_cert_appgw.secret_id
+    }
+    key_vault_id = azurerm_key_vault.ex1_akv.id
+  }
+
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.ex1_vm_ass_iden.id]
+  }
+
   disable_password_authentication = false
+
+  depends_on = [azurerm_key_vault.ex1_akv]
 }
 
-# # Custom Script Extension to install NGINX and configure it
+# resource "azurerm_virtual_machine_extension" "ex1_vm_extension_akv_grab" {
+#   name                       = "akv_grab"
+#   virtual_machine_id         = azurerm_linux_virtual_machine.ex1_vm.id
+#   publisher                  = "Microsoft.Azure.KeyVault"
+#   type                       = "KeyVaultForLinux"
+#   type_handler_version       = "2.0"
+#   automatic_upgrade_enabled  = true
+#   auto_upgrade_minor_version = true
+
+#   settings = <<SETTINGS
+#     {
+#       "secretsManagementSettings": {
+#           "pollingIntervalInS": "10",
+#           "requireInitialSync": true,
+#           "certificateStoreLocation": "/etc/nginx/ssl",
+#           "observedCertificates": [ "${azurerm_key_vault_certificate.ex1_cert_appgw.secret_id}" ]
+#         },
+#         "authenticationSettings": {
+#           "msiEndpoint":  "http://169.254.169.254/metadata/identity",
+#           "msiClientId":  "${azurerm_user_assigned_identity.ex1_vm_ass_iden.client_id}"
+#         }
+#     }
+# SETTINGS
+
+#   depends_on = [azurerm_linux_virtual_machine.ex1_vm]
+# }
+
+# Custom Script Extension to install NGINX and configure it
 # resource "azurerm_virtual_machine_extension" "ex1_vm_extension_nginx_setup" {
 #   name                       = "nginx_setup"
 #   virtual_machine_id         = azurerm_linux_virtual_machine.ex1_vm.id
@@ -353,6 +400,7 @@ resource "azurerm_subnet_network_security_group_association" "ex1_secg_asso_app_
   subnet_id                 = azurerm_subnet.ex1_subnet_app_gw.id
   network_security_group_id = azurerm_network_security_group.ex1_app_gw_netsecg.id
 }
+
 # NSG Rules required ports by application gateway please see https://learn.microsoft.com/en-us/azure/application-gateway/configuration-infrastructure#:~:text=V2%3A%20Ports%2065200%2D65535
 
 # Inbound Client traffic
@@ -442,6 +490,10 @@ resource "azurerm_application_gateway" "ex1_app_gw" {
     name                = local.cert_tls_ssl
     key_vault_secret_id = azurerm_key_vault_certificate.ex1_cert_appgw.secret_id
   }
+  trusted_root_certificate {
+    name = local.cert_tls_ssl
+    key_vault_secret_id = azurerm_key_vault_certificate.ex1_cert_appgw.secret_id
+  }
   gateway_ip_configuration {
     name      = "${var.rg_name}_app_gw_ip_config"
     subnet_id = azurerm_subnet.ex1_subnet_app_gw.id
@@ -464,6 +516,7 @@ resource "azurerm_application_gateway" "ex1_app_gw" {
     protocol              = "Https"
     request_timeout       = 60
     host_name             = "exercise1.alex.com"
+    trusted_root_certificate_names = [local.cert_tls_ssl]
   }
   http_listener {
     name                           = local.listener_name
@@ -506,14 +559,17 @@ resource "azurerm_key_vault" "ex1_akv" {
   sku_name                  = "standard"
   tenant_id                 = data.azurerm_client_config.current.tenant_id
   enable_rbac_authorization = true
+  enabled_for_deployment    = true
 }
 
+#  Application Gateway
 resource "azurerm_role_assignment" "app_gw_kv_role" {
   scope                = azurerm_key_vault.ex1_akv.id
   role_definition_name = "Key Vault Certificate User"
   principal_id         = azurerm_user_assigned_identity.ex1_app_gw_ass_iden.principal_id
 }
 
+# Client
 resource "azurerm_role_assignment" "client_role_certs" {
   scope                = azurerm_key_vault.ex1_akv.id
   role_definition_name = "Key Vault Certificates Officer"
@@ -525,6 +581,21 @@ resource "azurerm_role_assignment" "client_role_secrets" {
   role_definition_name = "Key Vault Secrets Officer"
   principal_id         = data.azurerm_client_config.current.object_id
 }
+
+# VM
+resource "azurerm_user_assigned_identity" "ex1_vm_ass_iden" {
+  name                = "${var.rg_name}_vm_ass_iden"
+  location            = azurerm_resource_group.ex1.location
+  resource_group_name = azurerm_resource_group.ex1.name
+}
+
+resource "azurerm_role_assignment" "vm_role_certs" {
+  scope                = azurerm_key_vault.ex1_akv.id
+  role_definition_name = "Key Vault Certificates Officer"
+  principal_id         = azurerm_user_assigned_identity.ex1_vm_ass_iden.principal_id
+}
+
+# Secrets and Certs
 
 resource "azurerm_key_vault_secret" "ex1_akv_db_secret" {
   name         = "${var.rg_name}-db-secret"
