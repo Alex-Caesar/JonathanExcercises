@@ -4,6 +4,10 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "3.99.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "3.6.1"
+    }
   }
 }
 
@@ -29,6 +33,12 @@ locals {
   cert_tls_ssl                   = "${var.rg_name}-app-gw-cert"
   vm_nic_ip_name                 = "${var.rg_name}-nic-vm-ip"
 }
+
+resource "random_integer" "number" {
+  min = 1
+  max = 500
+}
+
 
 #______________________________ Base resources ________________________________________________________
 resource "azurerm_resource_group" "ex1" {
@@ -490,7 +500,7 @@ resource "azurerm_network_interface_application_gateway_backend_address_pool_ass
 
 #________________________ AKV associated resources ______________________________________________
 resource "azurerm_key_vault" "ex1_akv" {
-  name                      = "${var.rg_name}-akv-555534"
+  name                      = "${var.rg_name}-akv-${random_integer.number.result}"
   resource_group_name       = azurerm_resource_group.ex1.name
   location                  = azurerm_resource_group.ex1.location
   sku_name                  = "standard"
@@ -516,13 +526,13 @@ resource "azurerm_role_assignment" "client_role_secrets" {
   principal_id         = data.azurerm_client_config.current.object_id
 }
 
-# resource "azurerm_key_vault_secret" "ex1_akv_db_secret" {
-#   name         = "${var.rg_name}-db-secret"
-#   value        = azurerm_mssql_server.ex1_sql_server.administrator_login_password
-#   key_vault_id = azurerm_key_vault.ex1_akv.id
-#   # to ensure the connection secret string is created after the value is generated
-#   depends_on = [azurerm_mssql_database.ex1_sql_db, azurerm_role_assignment.client_role_certs, azurerm_role_assignment.client_role_secrets]
-# }
+resource "azurerm_key_vault_secret" "ex1_akv_db_secret" {
+  name         = "${var.rg_name}-db-secret"
+  value        = azurerm_mssql_server.ex1_sql_server.administrator_login_password
+  key_vault_id = azurerm_key_vault.ex1_akv.id
+  # to ensure the connection secret string is created after the value is generated
+  depends_on = [azurerm_mssql_database.ex1_sql_db, azurerm_role_assignment.client_role_certs, azurerm_role_assignment.client_role_secrets]
+}
 
 resource "azurerm_key_vault_certificate" "ex1_cert_appgw" {
   name         = "${var.rg_name}-cert-appgw"
