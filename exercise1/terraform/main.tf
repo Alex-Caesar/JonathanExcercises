@@ -82,7 +82,7 @@ resource "azurerm_network_security_rule" "filter1433" {
 
 resource "azurerm_network_security_rule" "filterRedirect" {
   name                        = "filterRedirect"
-  priority                    = 101
+  priority                    = 200
   direction                   = "Inbound"
   access                      = "Allow"
   protocol                    = "*"
@@ -223,7 +223,7 @@ resource "azurerm_network_security_rule" "https_rule_vm_gw" {
 
 resource "azurerm_network_security_rule" "https_rule_vm_lb" {
   name                        = "AllowHTTPS"
-  priority                    = 101
+  priority                    = 200
   direction                   = "Inbound"
   access                      = "Allow"
   protocol                    = "Tcp"
@@ -233,6 +233,29 @@ resource "azurerm_network_security_rule" "https_rule_vm_lb" {
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.ex1.name
   network_security_group_name = azurerm_network_security_group.ex1_vm_netsecg.name
+}
+
+# _________________________ SSH capability ____________________________________________________
+resource "azurerm_network_security_rule" "https_rule_vm_ssh" {
+  name                         = "AllowSsh"
+  priority                     = 300
+  direction                    = "Inbound"
+  access                       = "Allow"
+  protocol                     = "Tcp"
+  source_port_range            = "*"
+  destination_port_range       = "22"
+  source_address_prefix        = "108.203.115.95/32"
+  destination_address_prefixes = azurerm_subnet.ex1_subnet_vm.address_prefixes
+  resource_group_name          = azurerm_resource_group.ex1.name
+  network_security_group_name  = azurerm_network_security_group.ex1_vm_netsecg.name
+}
+
+resource "azurerm_public_ip" "ex1_vm_pub_ip" {
+  name                = "${var.rg_name}_vm_pub_ip"
+  location            = azurerm_resource_group.ex1.location
+  resource_group_name = azurerm_resource_group.ex1.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
 }
 
 resource "azurerm_subnet_network_security_group_association" "ex1_secg_asso_vm" {
@@ -249,6 +272,7 @@ resource "azurerm_network_interface" "ex1_nic_vm" {
     name                          = local.vm_nic_ip_name
     subnet_id                     = azurerm_subnet.ex1_subnet_vm.id
     private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = azurerm_public_ip.ex1_vm_pub_ip.id
   }
 }
 
@@ -282,24 +306,24 @@ resource "azurerm_linux_virtual_machine" "ex1_vm" {
   disable_password_authentication = false
 }
 
-# Custom Script Extension to install NGINX and configure it
-resource "azurerm_virtual_machine_extension" "ex1_vm_extension_nginx_setup" {
-  name                       = "nginx_setup"
-  virtual_machine_id         = azurerm_linux_virtual_machine.ex1_vm.id
-  publisher                  = "Microsoft.Azure.Extensions"
-  type                       = "CustomScript"
-  type_handler_version       = "2.0"
-  automatic_upgrade_enabled  = false
-  auto_upgrade_minor_version = false
+# # Custom Script Extension to install NGINX and configure it
+# resource "azurerm_virtual_machine_extension" "ex1_vm_extension_nginx_setup" {
+#   name                       = "nginx_setup"
+#   virtual_machine_id         = azurerm_linux_virtual_machine.ex1_vm.id
+#   publisher                  = "Microsoft.Azure.Extensions"
+#   type                       = "CustomScript"
+#   type_handler_version       = "2.0"
+#   automatic_upgrade_enabled  = false
+#   auto_upgrade_minor_version = false
 
-  settings = <<SETTINGS
-    {
-        "script": "${base64encode(file(var.nginxConfig))}"
-    }
-SETTINGS
+#   settings = <<SETTINGS
+#     {
+#         "script": "${base64encode(file(var.nginxConfig))}"
+#     }
+# SETTINGS
 
-  depends_on = [azurerm_linux_virtual_machine.ex1_vm]
-}
+#   depends_on = [azurerm_linux_virtual_machine.ex1_vm]
+# }
 
 #___________________________ App Gateway Related resources ______________________________
 resource "azurerm_subnet" "ex1_subnet_app_gw" {
@@ -339,7 +363,7 @@ resource "azurerm_network_security_rule" "https_rule_app_gw" {
 # Inbound Infrastructure Ports
 resource "azurerm_network_security_rule" "lb_inbound" {
   name                        = "AllowLb"
-  priority                    = 102
+  priority                    = 200
   direction                   = "Inbound"
   access                      = "Allow"
   protocol                    = "*"
@@ -353,13 +377,13 @@ resource "azurerm_network_security_rule" "lb_inbound" {
 
 resource "azurerm_network_security_rule" "health_probe_inbound" {
   name                        = "AllowHealthProbe"
-  priority                    = 103
+  priority                    = 300
   direction                   = "Inbound"
   access                      = "Allow"
   protocol                    = "Tcp"
   source_port_range           = "*"
   destination_port_range      = "65200-65535"
-  source_address_prefix       = "GatewayManager"
+  source_address_prefix       = "*" #Terraform specific constraint requires internet traffic
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.ex1.name
   network_security_group_name = azurerm_network_security_group.ex1_app_gw_netsecg.name
@@ -368,7 +392,7 @@ resource "azurerm_network_security_rule" "health_probe_inbound" {
 # Outbound rule
 resource "azurerm_network_security_rule" "outbound_internet" {
   name                        = "outboundInternet"
-  priority                    = 104
+  priority                    = 400
   direction                   = "Inbound"
   access                      = "Allow"
   protocol                    = "Tcp"
@@ -429,13 +453,14 @@ resource "azurerm_application_gateway" "ex1_app_gw" {
     port                  = 443
     protocol              = "Https"
     request_timeout       = 60
+    host_name             = "exercise1.alex.com"
   }
   http_listener {
     name                           = local.listener_name
     frontend_ip_configuration_name = local.frontend_ip_configuration_name
     frontend_port_name             = local.frontend_port_name
-    protocol                       = "Http"
-    # ssl_certificate_name           = local.cert_tls_ssl
+    protocol                       = "Https"
+    ssl_certificate_name           = local.cert_tls_ssl
   }
   request_routing_rule {
     name                       = local.request_routing_rule_name
@@ -491,13 +516,13 @@ resource "azurerm_role_assignment" "client_role_secrets" {
   principal_id         = data.azurerm_client_config.current.object_id
 }
 
-resource "azurerm_key_vault_secret" "ex1_akv_db_secret" {
-  name         = "${var.rg_name}-db-secret"
-  value        = azurerm_mssql_server.ex1_sql_server.administrator_login_password
-  key_vault_id = azurerm_key_vault.ex1_akv.id
-  # to ensure the connection secret string is created after the value is generated
-  depends_on = [azurerm_mssql_database.ex1_sql_db, azurerm_role_assignment.client_role_certs, azurerm_role_assignment.client_role_secrets]
-}
+# resource "azurerm_key_vault_secret" "ex1_akv_db_secret" {
+#   name         = "${var.rg_name}-db-secret"
+#   value        = azurerm_mssql_server.ex1_sql_server.administrator_login_password
+#   key_vault_id = azurerm_key_vault.ex1_akv.id
+#   # to ensure the connection secret string is created after the value is generated
+#   depends_on = [azurerm_mssql_database.ex1_sql_db, azurerm_role_assignment.client_role_certs, azurerm_role_assignment.client_role_secrets]
+# }
 
 resource "azurerm_key_vault_certificate" "ex1_cert_appgw" {
   name         = "${var.rg_name}-cert-appgw"
@@ -539,7 +564,10 @@ resource "azurerm_key_vault_certificate" "ex1_cert_appgw" {
         "keyEncipherment",
       ]
 
-      subject            = "cn=${local.cert_tls_ssl}"
+      subject = "cn=exercise1.alex.com"
+      subject_alternative_names {
+        dns_names = ["exercise1.alex.com"]
+      }
       validity_in_months = 3
     }
   }
