@@ -32,6 +32,7 @@ locals {
   redirect_configuration_name    = "${azurerm_virtual_network.ex1_vnet.name}-rdrcfg"
   cert_tls_ssl                   = "${var.rg_name}-app-gw-cert"
   vm_nic_ip_name                 = "${var.rg_name}-nic-vm-ip"
+  host_name = "exercise1.alex.com"
 }
 
 resource "random_integer" "number" {
@@ -515,7 +516,7 @@ resource "azurerm_application_gateway" "ex1_app_gw" {
     port                  = 443
     protocol              = "Https"
     request_timeout       = 60
-    host_name             = "exercise1.alex.com"
+    host_name             = local.host_name
     trusted_root_certificate_names = [local.cert_tls_ssl]
   }
   http_listener {
@@ -645,9 +646,9 @@ resource "azurerm_key_vault_certificate" "ex1_cert_appgw" {
         "keyEncipherment",
       ]
 
-      subject = "cn=exercise1.alex.com"
+      subject = "cn=${local.host_name}"
       subject_alternative_names {
-        dns_names = ["exercise1.alex.com"]
+        dns_names = ["${local.host_name}"]
       }
       validity_in_months = 3
     }
