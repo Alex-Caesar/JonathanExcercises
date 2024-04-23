@@ -85,6 +85,7 @@ resource "azurerm_network_interface" "ex1_nic_vm" {
     name                          = local.vm_nic_ip_name
     subnet_id                     = azurerm_subnet.ex1_subnet_vm.id
     private_ip_address_allocation = "Dynamic"
+    # Comment out when SSH is turned off
     public_ip_address_id          = azurerm_public_ip.ex1_vm_pub_ip.id
   }
 }
