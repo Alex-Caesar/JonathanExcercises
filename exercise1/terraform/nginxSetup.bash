@@ -8,8 +8,8 @@ sudo apt-get install -y nginx
 
 sudo mkdir /etc/nginx/ssl
 
-sudo cp /var/lib/waagent/${CERTNAME}.crt /etc/nginx/ssl/crt.crt
-sudo cp /var/lib/waagent/${CERTNAME}.prv /etc/nginx/ssl/key.key
+sudo cp /var/lib/waagent/${CERTTHUMB}.crt /etc/nginx/ssl/crt.crt
+sudo cp /var/lib/waagent/${CERTTHUMB}.prv /etc/nginx/ssl/key.key
 
 # Create HTML file
 sudo tee /var/www/html/index.html <<EOF
