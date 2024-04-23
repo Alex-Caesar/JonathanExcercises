@@ -32,7 +32,7 @@ locals {
   redirect_configuration_name    = "${azurerm_virtual_network.ex1_vnet.name}-rdrcfg"
   cert_tls_ssl                   = "${var.rg_name}-app-gw-cert"
   vm_nic_ip_name                 = "${var.rg_name}-nic-vm-ip"
-  host_name = "exercise1.alex.com"
+  host_name                      = "exercise1.alex.com"
 }
 
 resource "random_integer" "number" {
@@ -274,18 +274,18 @@ resource "azurerm_network_security_rule" "https_rule_vm_lb" {
 #   network_security_group_id = azurerm_network_security_group.ex1_vm_netsecg.id
 # }
 
-# resource "azurerm_network_interface" "ex1_nic_vm" {
-#   name                = "${var.rg_name}_nic_vm"
-#   resource_group_name = azurerm_resource_group.ex1.name
-#   location            = azurerm_resource_group.ex1.location
+resource "azurerm_network_interface" "ex1_nic_vm" {
+  name                = "${var.rg_name}_nic_vm"
+  resource_group_name = azurerm_resource_group.ex1.name
+  location            = azurerm_resource_group.ex1.location
 
-#   ip_configuration {
-#     name                          = local.vm_nic_ip_name
-#     subnet_id                     = azurerm_subnet.ex1_subnet_vm.id
-#     private_ip_address_allocation = "Dynamic"
-#     public_ip_address_id          = azurerm_public_ip.ex1_vm_pub_ip.id
-#   }
-# }
+  ip_configuration {
+    name                          = local.vm_nic_ip_name
+    subnet_id                     = azurerm_subnet.ex1_subnet_vm.id
+    private_ip_address_allocation = "Dynamic"
+    # public_ip_address_id          = azurerm_public_ip.ex1_vm_pub_ip.id
+  }
+}
 
 #___________________________ VM associated resources ______________________________
 
@@ -492,7 +492,7 @@ resource "azurerm_application_gateway" "ex1_app_gw" {
     key_vault_secret_id = azurerm_key_vault_certificate.ex1_cert_appgw.secret_id
   }
   trusted_root_certificate {
-    name = local.cert_tls_ssl
+    name                = local.cert_tls_ssl
     key_vault_secret_id = azurerm_key_vault_certificate.ex1_cert_appgw.secret_id
   }
   gateway_ip_configuration {
@@ -511,12 +511,12 @@ resource "azurerm_application_gateway" "ex1_app_gw" {
     name = local.backend_address_pool_name
   }
   backend_http_settings {
-    name                  = local.http_setting_name
-    cookie_based_affinity = "Disabled"
-    port                  = 443
-    protocol              = "Https"
-    request_timeout       = 60
-    host_name             = local.host_name
+    name                           = local.http_setting_name
+    cookie_based_affinity          = "Disabled"
+    port                           = 443
+    protocol                       = "Https"
+    request_timeout                = 60
+    host_name                      = local.host_name
     trusted_root_certificate_names = [local.cert_tls_ssl]
   }
   http_listener {
