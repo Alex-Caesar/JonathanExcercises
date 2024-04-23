@@ -1,18 +1,25 @@
 #!/bin/bash
 
+# run as root
+sudo su
+
 # Update package list
-sudo apt-get update
+apt update
 
 # Install Nginx
-sudo apt-get install -y nginx
+apt install -y nginx
 
-sudo mkdir /etc/nginx/ssl
+# Grabbing key vault cert
+mkdir /etc/nginx/ssl
+cp /tmp/${AKV_NAME}.${CERT_NAME} /etc/nginx/ssl
 
-sudo cp /var/lib/waagent/${CERTTHUMB}.crt /etc/nginx/ssl/crt.crt
-sudo cp /var/lib/waagent/${CERTTHUMB}.prv /etc/nginx/ssl/key.key
+# exporting private key and cert
+cd /etc/nginx/ssl
+awk '/BEGIN PRIVATE KEY/,/END PRIVATE KEY/' ${AKV_NAME}.${CERT_NAME} > key.pem
+awk '/BEGIN CERTIFICATE/,/END CERTIFICATE/' ${AKV_NAME}.${CERT_NAME} > crt.crt
 
 # Create HTML file
-sudo tee /var/www/html/index.html <<EOF
+tee /var/www/html/index.html <<EOF
 <!DOCTYPE html>
 <html>
 <head>
@@ -25,13 +32,13 @@ sudo tee /var/www/html/index.html <<EOF
 EOF
 
 # Configure Nginx to respond to port 443
-sudo tee /etc/nginx/sites-available/default <<EOF
+tee /etc/nginx/sites-available/default <<EOF
 server {
     listen 443 ssl default_server;
     server_name _;
 
     ssl_certificate /etc/nginx/ssl/crt.crt;
-    ssl_certificate_key /etc/nginx/ssl/key.key; 
+    ssl_certificate_key /etc/nginx/ssl/key.pem; 
 
     root /var/www/html;
     index index.html;
@@ -43,12 +50,12 @@ server {
 EOF
 
 # Start Nginx
-sudo systemctl start nginx
+systemctl start nginx
 
 # Test Nginx configuration
-sudo nginx -t
+nginx -t
 
 # Reload Nginx to apply changes
-sudo systemctl reload nginx
+systemctl reload nginx
 
 echo "Nginx installed and configured to respond to port 443."

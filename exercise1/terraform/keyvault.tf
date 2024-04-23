@@ -12,14 +12,26 @@ resource "azurerm_key_vault" "ex1_akv" {
 # Virtual Machine
 resource "azurerm_role_assignment" "vm_role_certs" {
   scope                = azurerm_key_vault.ex1_akv.id
+  role_definition_name = "Key Vault Certificate User"
+  principal_id         = azurerm_user_assigned_identity.ex1_vm_ass_iden.principal_id
+}
+
+resource "azurerm_role_assignment" "vm_role_secret" {
+  scope                = azurerm_key_vault.ex1_akv.id
   role_definition_name = "Key Vault Secrets User"
   principal_id         = azurerm_user_assigned_identity.ex1_vm_ass_iden.principal_id
 }
 
 #  Application Gateway
-resource "azurerm_role_assignment" "app_gw_kv_role" {
+resource "azurerm_role_assignment" "app_gw_kv_role_cert" {
   scope                = azurerm_key_vault.ex1_akv.id
   role_definition_name = "Key Vault Certificate User"
+  principal_id         = azurerm_user_assigned_identity.ex1_app_gw_ass_iden.principal_id
+}
+
+resource "azurerm_role_assignment" "app_gw_kv_role_secret" {
+  scope                = azurerm_key_vault.ex1_akv.id
+  role_definition_name = "Key Vault Secrets User"
   principal_id         = azurerm_user_assigned_identity.ex1_app_gw_ass_iden.principal_id
 }
 
