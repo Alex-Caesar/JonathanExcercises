@@ -246,45 +246,45 @@ resource "azurerm_network_security_rule" "https_rule_vm_lb" {
 }
 
 # _________________________ SSH capability ____________________________________________________
-resource "azurerm_network_security_rule" "https_rule_vm_ssh" {
-  name                         = "AllowSsh"
-  priority                     = 300
-  direction                    = "Inbound"
-  access                       = "Allow"
-  protocol                     = "Tcp"
-  source_port_range            = "*"
-  destination_port_range       = "22"
-  source_address_prefix        = "108.203.115.95/32"
-  destination_address_prefixes = azurerm_subnet.ex1_subnet_vm.address_prefixes
-  resource_group_name          = azurerm_resource_group.ex1.name
-  network_security_group_name  = azurerm_network_security_group.ex1_vm_netsecg.name
-}
+# resource "azurerm_network_security_rule" "https_rule_vm_ssh" {
+#   name                         = "AllowSsh"
+#   priority                     = 300
+#   direction                    = "Inbound"
+#   access                       = "Allow"
+#   protocol                     = "Tcp"
+#   source_port_range            = "*"
+#   destination_port_range       = "22"
+#   source_address_prefix        = "108.203.115.95/32"
+#   destination_address_prefixes = azurerm_subnet.ex1_subnet_vm.address_prefixes
+#   resource_group_name          = azurerm_resource_group.ex1.name
+#   network_security_group_name  = azurerm_network_security_group.ex1_vm_netsecg.name
+# }
 
-resource "azurerm_public_ip" "ex1_vm_pub_ip" {
-  name                = "${var.rg_name}_vm_pub_ip"
-  location            = azurerm_resource_group.ex1.location
-  resource_group_name = azurerm_resource_group.ex1.name
-  allocation_method   = "Static"
-  sku                 = "Standard"
-}
+# resource "azurerm_public_ip" "ex1_vm_pub_ip" {
+#   name                = "${var.rg_name}_vm_pub_ip"
+#   location            = azurerm_resource_group.ex1.location
+#   resource_group_name = azurerm_resource_group.ex1.name
+#   allocation_method   = "Static"
+#   sku                 = "Standard"
+# }
 
-resource "azurerm_subnet_network_security_group_association" "ex1_secg_asso_vm" {
-  subnet_id                 = azurerm_subnet.ex1_subnet_vm.id
-  network_security_group_id = azurerm_network_security_group.ex1_vm_netsecg.id
-}
+# resource "azurerm_subnet_network_security_group_association" "ex1_secg_asso_vm" {
+#   subnet_id                 = azurerm_subnet.ex1_subnet_vm.id
+#   network_security_group_id = azurerm_network_security_group.ex1_vm_netsecg.id
+# }
 
-resource "azurerm_network_interface" "ex1_nic_vm" {
-  name                = "${var.rg_name}_nic_vm"
-  resource_group_name = azurerm_resource_group.ex1.name
-  location            = azurerm_resource_group.ex1.location
+# resource "azurerm_network_interface" "ex1_nic_vm" {
+#   name                = "${var.rg_name}_nic_vm"
+#   resource_group_name = azurerm_resource_group.ex1.name
+#   location            = azurerm_resource_group.ex1.location
 
-  ip_configuration {
-    name                          = local.vm_nic_ip_name
-    subnet_id                     = azurerm_subnet.ex1_subnet_vm.id
-    private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = azurerm_public_ip.ex1_vm_pub_ip.id
-  }
-}
+#   ip_configuration {
+#     name                          = local.vm_nic_ip_name
+#     subnet_id                     = azurerm_subnet.ex1_subnet_vm.id
+#     private_ip_address_allocation = "Dynamic"
+#     public_ip_address_id          = azurerm_public_ip.ex1_vm_pub_ip.id
+#   }
+# }
 
 #___________________________ VM associated resources ______________________________
 
