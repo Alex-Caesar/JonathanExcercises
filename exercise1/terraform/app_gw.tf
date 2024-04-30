@@ -34,7 +34,7 @@ resource "azurerm_network_security_rule" "https_rule_app_gw" {
   protocol                    = "Tcp"
   source_port_range           = "*"
   destination_port_range      = "443"
-  source_address_prefix     = "*"
+  source_address_prefix       = "*"
   destination_address_prefix  = azurerm_subnet.ex1_subnet_app_gw.address_prefixes.0
   resource_group_name         = azurerm_resource_group.ex1.name
   network_security_group_name = azurerm_network_security_group.ex1_app_gw_netsecg.name

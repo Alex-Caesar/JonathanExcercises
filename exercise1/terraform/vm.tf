@@ -43,7 +43,7 @@ resource "azurerm_user_assigned_identity" "ex1_vm_ass_iden" {
 #   protocol                     = "Tcp"
 #   source_port_range            = "*"
 #   destination_port_range       = "22"
-#   source_address_prefix        = "108.203.115.95/32"
+#   source_address_prefix        = ""
 #   destination_address_prefixes = azurerm_subnet.ex1_subnet_vm.address_prefixes
 #   resource_group_name          = azurerm_resource_group.ex1.name
 #   network_security_group_name  = azurerm_network_security_group.ex1_vm_netsecg.name
