@@ -63,7 +63,7 @@ resource "azurerm_network_security_rule" "health_probe_inbound" {
   protocol                    = "Tcp"
   source_port_range           = "*"
   destination_port_range      = "65200-65535"
-  source_address_prefix       = "GatewayManager" 
+  source_address_prefix       = "GatewayManager"
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.ex1.name
   network_security_group_name = azurerm_network_security_group.ex1_app_gw_netsecg.name
