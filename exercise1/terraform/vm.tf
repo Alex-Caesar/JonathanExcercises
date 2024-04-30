@@ -98,7 +98,7 @@ resource "azurerm_linux_virtual_machine" "ex1_vm" {
 
   admin_ssh_key {
     username   = var.vm_admin
-    public_key = file("./vm.pub")
+    public_key = file("./vm.pub.pub")
   }
 
   source_image_reference {
