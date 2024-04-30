@@ -21,7 +21,6 @@ variable "db_admin" {
 
 variable "db_password" {
   type        = string
-  default     = "Complex6DbPassw0rd!"
   description = "The passqord for the msSQL server"
   sensitive   = true
 }
@@ -42,7 +41,6 @@ variable "vm_admin" {
 
 variable "vm_password" {
   type        = string
-  default     = "Complex6VmPassw0rd!"
   description = "The password for the vm"
   sensitive   = true
 }

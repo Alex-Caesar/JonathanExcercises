@@ -33,7 +33,7 @@ resource "azurerm_network_security_rule" "https_rule_app_gw" {
   access                      = "Allow"
   protocol                    = "Tcp"
   source_port_range           = "*"
-  destination_port_range      = "80"
+  destination_port_range      = "443"
   source_address_prefixes     = [azurerm_subnet.ex1_subnet_app_gw.address_prefixes.0]
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.ex1.name
@@ -50,7 +50,7 @@ resource "azurerm_network_security_rule" "lb_inbound" {
   source_port_range           = "*"
   destination_port_range      = "*"
   source_address_prefix       = "AzureLoadBalancer"
-  destination_address_prefix  = "*"
+  destination_address_prefix  = azurerm_subnet.ex1_subnet_vm.address_prefixes.0
   resource_group_name         = azurerm_resource_group.ex1.name
   network_security_group_name = azurerm_network_security_group.ex1_app_gw_netsecg.name
 }
@@ -63,7 +63,7 @@ resource "azurerm_network_security_rule" "health_probe_inbound" {
   protocol                    = "Tcp"
   source_port_range           = "*"
   destination_port_range      = "65200-65535"
-  source_address_prefix       = "*" #Terraform specific constraint requires internet traffic
+  source_address_prefix       = "GatewayManager" 
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.ex1.name
   network_security_group_name = azurerm_network_security_group.ex1_app_gw_netsecg.name
@@ -73,7 +73,7 @@ resource "azurerm_network_security_rule" "health_probe_inbound" {
 resource "azurerm_network_security_rule" "outbound_internet" {
   name                        = "outboundInternet"
   priority                    = 400
-  direction                   = "Inbound"
+  direction                   = "Outbound"
   access                      = "Allow"
   protocol                    = "Tcp"
   source_port_range           = "*"

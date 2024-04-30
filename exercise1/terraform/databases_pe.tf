@@ -30,7 +30,7 @@ resource "azurerm_network_security_rule" "filter1433" {
   source_port_range           = "1433"
   destination_port_range      = "1433"
   source_address_prefix       = azurerm_subnet.ex1_subnet_vm.address_prefixes.0
-  destination_address_prefix  = "*"
+  destination_address_prefix  = azurerm_subnet.ex1_subnet_pe.address_prefixes.0
   resource_group_name         = azurerm_resource_group.ex1.name
   network_security_group_name = azurerm_network_security_group.ex1_sql_netsecg.name
 }
@@ -44,7 +44,7 @@ resource "azurerm_network_security_rule" "filterRedirect" {
   source_port_range           = "11000-11999"
   destination_port_range      = "11000-11999"
   source_address_prefix       = azurerm_subnet.ex1_subnet_pe.address_prefixes.0
-  destination_address_prefix  = "*"
+  destination_address_prefix  = azurerm_subnet.ex1_subnet_vm.address_prefixes.0
   resource_group_name         = azurerm_resource_group.ex1.name
   network_security_group_name = azurerm_network_security_group.ex1_sql_netsecg.name
 }
