@@ -21,7 +21,7 @@ variable "db_admin" {
 
 variable "db_password" {
   type        = string
-  description = "The passqord for the msSQL server"
+  description = "The password for the msSQL server"
   sensitive   = true
 }
 
