@@ -95,7 +95,6 @@ resource "azurerm_linux_virtual_machine" "ex1_vm" {
   computer_name = var.vm_name
 
   admin_username = var.vm_admin
-  # admin_password = var.vm_password
 
   admin_ssh_key {
     username   = var.vm_admin

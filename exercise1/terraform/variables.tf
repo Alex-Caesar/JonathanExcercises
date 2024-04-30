@@ -39,12 +39,6 @@ variable "vm_admin" {
   sensitive   = true
 }
 
-variable "vm_password" {
-  type        = string
-  description = "The password for the vm"
-  sensitive   = true
-}
-
 variable "vm_size" {
   type        = string
   default     = "Standard_B1s"
