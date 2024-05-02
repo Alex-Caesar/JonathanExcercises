@@ -6,12 +6,12 @@ resource "azurerm_kubernetes_cluster" "ex2_aks" {
   name                = "${var.rg_name}-aks-${random_integer.number.result}"
   resource_group_name = azurerm_resource_group.ex2.name
   location            = azurerm_resource_group.ex2.location
-  dns_prefix          = "ex2aks"
+  dns_prefix          = var.aks_dns_prefix
 
   default_node_pool {
-    name                        = "default"
-    node_count                  = 1
-    vm_size                     = "Standard_D2_V2"
+    name                        = var.aks_default_np_name
+    node_count                  = var.aks_default_np_count
+    vm_size                     = var.aks_default_np_size
     temporary_name_for_rotation = "temp-${var.rg_name}-aks-${random_integer.number.result}"
   }
 

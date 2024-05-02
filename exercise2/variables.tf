@@ -44,3 +44,25 @@ variable "psql_backup_ret" {
   default     = "0"
   description = "The backup retention policy for the PSQL server"
 }
+
+# AKV
+variable "aks_dns_prefix" {
+  type        = string
+  default     = "ex2aks"
+  description = "The dns prefix for the AKS"
+}
+variable "aks_default_np_name" {
+  type        = string
+  default     = "default"
+  description = "The default node pool name for the AKS"
+}
+variable "aks_default_np_count" {
+  type        = string
+  default     = "1"
+  description = "The default node pool count for the AKS"
+}
+variable "aks_default_np_size" {
+  type        = string
+  default     = "Standard_D2_V2"
+  description = "The default node pool vm size for the AKS"
+}
