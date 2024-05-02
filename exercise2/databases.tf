@@ -1,7 +1,15 @@
 # ***************************  Database related resources ************************************
 
+# __________________________  Private Endpoint  ______________________________________________
+resource "azurerm_subnet" "ex2_db_pe" {
+  name                 = "${var.rg_name}-psql-server-${random_integer.number.result}"
+  resource_group_name  = azurerm_resource_group.ex2.name
+  virtual_network_name = azurerm_virtual_network.ex2_vnet.name
+  address_prefixes     = ["10.0.0.0/24"]
+}
 
-# __________________________  Postgres  __________________________________________
+
+# __________________________  Postgres  ______________________________________________________
 resource "azurerm_postgresql_server" "ex2_psql_serv" {
   name                = "${var.rg_name}-psql-server-${random_integer.number.result}"
   resource_group_name = azurerm_resource_group.ex2.name

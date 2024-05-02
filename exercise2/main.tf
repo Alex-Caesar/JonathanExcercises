@@ -27,7 +27,7 @@ resource "random_integer" "number" {
   max = 500
 }
 
-#______________________________ Base resources ________________________________________________________
+#______________________________ Base resources ____________________________________________________________
 resource "azurerm_resource_group" "ex2" {
   name     = var.rg_name
   location = var.rg_location

@@ -1,7 +1,0 @@
-Plan of action
-- databases, keyvault
-- private endpoints, networking
-- infrastructure of cluster
-- acr and charts
-- configuration of cluster
-- certs and appgw 

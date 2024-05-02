@@ -10,7 +10,7 @@ resource "azurerm_key_vault" "ex2_akv" {
   enabled_for_deployment        = true
 }
 
-# __________________________  Secrets and Certs __________________________________________
+# __________________________  Secrets and Certs _______________________________________________
 resource "azurerm_key_vault_secret" "ex2_akv_db_pass" {
   name         = var.psql_admin
   value        = azurerm_postgresql_server.ex2_psql_serv.administrator_login_password
