@@ -21,6 +21,8 @@ resource "azurerm_network_security_group" "ex2_sql_netsecg" {
 
 # NSG Rules
 
+# TODO
+
 # Postgres
 resource "azurerm_private_dns_zone" "ex2_priv_dns_zone_psql" {
   name                = "privatelink.postgres.database.azure.com"

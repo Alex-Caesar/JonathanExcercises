@@ -66,3 +66,8 @@ variable "aks_default_np_size" {
   default     = "Standard_D2_V2"
   description = "The default node pool vm size for the AKS"
 }
+variable "aks_ingress_name" {
+  type        = string
+  default     = "aksingress"
+  description = "The name ingress application gateway for the AKS"
+}

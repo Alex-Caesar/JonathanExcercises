@@ -15,6 +15,11 @@ resource "azurerm_kubernetes_cluster" "ex2_aks" {
     temporary_name_for_rotation = "temp-${var.rg_name}-aks-${random_integer.number.result}"
   }
 
+  ingress_application_gateway {
+    gateway_name = var.aks_ingress_name
+    gateway_id   = azurerm_application_gateway.ex2_app_gw.id
+  }
+
   identity {
     type = "SystemAssigned"
   }
