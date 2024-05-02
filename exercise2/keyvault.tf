@@ -1,3 +1,4 @@
+# ***************************  Keyvault related resources ************************************
 resource "azurerm_key_vault" "ex2_akv" {
   name                          = "${var.rg_name}-akv-${random_integer.number.result}"
   resource_group_name           = azurerm_resource_group.ex2.name
@@ -9,6 +10,7 @@ resource "azurerm_key_vault" "ex2_akv" {
   enabled_for_deployment        = true
 }
 
+# __________________________  Secrets and Certs __________________________________________
 resource "azurerm_key_vault_secret" "ex2_akv_db_pass" {
   name         = var.psql_admin
   value        = azurerm_postgresql_server.ex2_psql_serv.administrator_login_password

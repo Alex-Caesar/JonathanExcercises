@@ -1,4 +1,7 @@
+# ***************************  Database related resources ************************************
 
+
+# __________________________  Postgres  __________________________________________
 resource "azurerm_postgresql_server" "ex2_psql_serv" {
   name                = "${var.rg_name}-psql-server-${random_integer.number.result}"
   resource_group_name = azurerm_resource_group.ex2.name
@@ -15,7 +18,6 @@ resource "azurerm_postgresql_server" "ex2_psql_serv" {
   administrator_login          = var.psql_admin
   administrator_login_password = var.psql_password
 }
-
 resource "azurerm_postgresql_database" "ex2_psql-db" {
   name                = "${var.rg_name}-psql-db-${random_integer.number.result}"
   resource_group_name = azurerm_resource_group.ex2.name

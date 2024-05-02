@@ -1,3 +1,4 @@
+#  BASE
 variable "rg_name" {
   type        = string
   default     = "exercise2"
@@ -11,7 +12,7 @@ variable "rg_location" {
   sensitive   = false
 }
 
-
+#  PSQL
 variable "psql_admin" {
   type        = string
   default     = "psqladmin"
