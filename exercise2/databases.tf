@@ -1,11 +1,57 @@
 # ***************************  Database related resources ************************************
 
 # __________________________  Private Endpoint  ______________________________________________
-resource "azurerm_subnet" "ex2_db_pe" {
-  name                 = "${var.rg_name}-psql-server-${random_integer.number.result}"
+
+# General Networking
+resource "azurerm_subnet" "ex2_subnet_pe" {
+  name                 = "${var.rg_name}-subnet-pe"
   resource_group_name  = azurerm_resource_group.ex2.name
   virtual_network_name = azurerm_virtual_network.ex2_vnet.name
   address_prefixes     = ["10.0.0.0/24"]
+}
+resource "azurerm_subnet_network_security_group_association" "ex2_secg_asso_pe" {
+  subnet_id                 = azurerm_subnet.ex2_subnet_pe.id
+  network_security_group_id = azurerm_network_security_group.ex2_sql_netsecg.id
+}
+resource "azurerm_network_security_group" "ex2_sql_netsecg" {
+  name                = "${var.rg_name}_pe_netsecg"
+  location            = azurerm_resource_group.ex2.location
+  resource_group_name = azurerm_resource_group.ex2.name
+}
+
+# NSG Rules
+
+# Postgres
+resource "azurerm_private_dns_zone" "ex2_priv_dns_zone_psql" {
+  name                = "privatelink.postgres.database.azure.com"
+  resource_group_name = azurerm_resource_group.ex2.name
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "ex2_priv_dns_z_net_link_psql" {
+  name                  = "${var.rg_name}_priv_dns_z_net_link_psql"
+  resource_group_name   = azurerm_resource_group.ex2.name
+  private_dns_zone_name = azurerm_private_dns_zone.ex2_priv_dns_zone_psql.name
+  virtual_network_id    = azurerm_virtual_network.ex2_vnet.id
+}
+
+resource "azurerm_private_endpoint" "ex2_psql_private_end" {
+  name                = "${var.rg_name}_psql_private_end"
+  resource_group_name = azurerm_resource_group.ex2.name
+  location            = azurerm_resource_group.ex2.location
+
+  subnet_id = azurerm_subnet.ex2_subnet_pe.id
+
+  private_service_connection {
+    name                           = "${var.rg_name}_sql_private_serv_conn"
+    private_connection_resource_id = azurerm_postgresql_server.ex2_psql_serv.id
+    subresource_names              = ["postgresqlServer"]
+    is_manual_connection           = false
+  }
+
+  private_dns_zone_group {
+    name                 = "${var.rg_name}_private_dns_zg_psql"
+    private_dns_zone_ids = [azurerm_private_dns_zone.ex2_priv_dns_zone_psql.id]
+  }
 }
 
 
