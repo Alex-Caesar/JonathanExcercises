@@ -1,0 +1,3 @@
+need to variablize k8s
+make psql flexible
+private endpoints 
