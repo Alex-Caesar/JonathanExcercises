@@ -10,7 +10,7 @@ resource "azurerm_key_vault" "ex2_akv" {
 }
 
 resource "azurerm_key_vault_secret" "ex2_akv_db_pass" {
-  name         = var.db_admin
+  name         = var.psql_admin
   value        = azurerm_postgresql_server.ex2_psql_serv.administrator_login_password
   key_vault_id = azurerm_key_vault.ex2_akv.id
   # to ensure the connection secret string is created after the value is generated

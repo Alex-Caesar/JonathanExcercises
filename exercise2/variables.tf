@@ -12,14 +12,34 @@ variable "rg_location" {
 }
 
 
-variable "db_admin" {
+variable "psql_admin" {
   type        = string
-  default     = "dbadmin"
-  description = "The username for the msSQL server"
+  default     = "psqladmin"
+  description = "The username for the PSQL server"
   sensitive   = true
 }
-variable "db_password" {
+variable "psql_password" {
   type        = string
-  description = "The password for the msSQL server"
+  description = "The password for the PSQL server"
   sensitive   = true
+}
+variable "psql_sku" {
+  type        = string
+  default     = "B_Gen4_1"
+  description = "The sku for the PSQL server"
+}
+variable "psql_ver" {
+  type        = string
+  default     = "11"
+  description = "The version for the PSQL server"
+}
+variable "psql_store_mb" {
+  type        = string
+  default     = "5120"
+  description = "The storage in mb for the PSQL server"
+}
+variable "psql_backup_ret" {
+  type        = string
+  default     = "0"
+  description = "The backup retention policy for the PSQL server"
 }

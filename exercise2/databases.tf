@@ -4,16 +4,16 @@ resource "azurerm_postgresql_server" "ex2_psql_serv" {
   resource_group_name = azurerm_resource_group.ex2.name
   location            = azurerm_resource_group.ex2.location
 
-  sku_name   = "B_Gen4_1"
-  version    = "11"
-  storage_mb = "5120"
-  #   backup_retention_days = 7 # off for sake of testing
+  sku_name              = var.psql_sku
+  version               = var.psql_ver
+  storage_mb            = var.psql_store_mb
+  backup_retention_days = var.psql_backup_ret
 
   ssl_enforcement_enabled       = false
   public_network_access_enabled = false
 
-  administrator_login          = var.db_admin
-  administrator_login_password = var.db_password
+  administrator_login          = var.psql_admin
+  administrator_login_password = var.psql_password
 }
 
 resource "azurerm_postgresql_database" "ex2_psql-db" {
