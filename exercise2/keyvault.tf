@@ -1,4 +1,3 @@
-#________________________ AKV associated resources ______________________________________________
 resource "azurerm_key_vault" "ex2_akv" {
   name                          = "${var.rg_name}-akv-${random_integer.number.result}"
   resource_group_name           = azurerm_resource_group.ex2.name
@@ -8,4 +7,12 @@ resource "azurerm_key_vault" "ex2_akv" {
   public_network_access_enabled = false
   enable_rbac_authorization     = true
   enabled_for_deployment        = true
+}
+
+resource "azurerm_key_vault_secret" "ex2_akv_db_pass" {
+  name         = var.db_admin
+  value        = azurerm_postgresql_server.ex2_psql_serv.administrator_login_password
+  key_vault_id = azurerm_key_vault.ex2_akv.id
+  # to ensure the connection secret string is created after the value is generated
+  depends_on = [azurerm_postgresql_server.ex2_psql_serv]
 }

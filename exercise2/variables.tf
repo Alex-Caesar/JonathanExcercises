@@ -4,10 +4,22 @@ variable "rg_name" {
   description = "The name to give the resource group that will be cat for other resource names."
   sensitive   = false
 }
-
 variable "rg_location" {
   type        = string
   default     = "westus"
   description = "The location of the resource group and subsequent assets or resources."
   sensitive   = false
+}
+
+
+variable "db_admin" {
+  type        = string
+  default     = "dbadmin"
+  description = "The username for the msSQL server"
+  sensitive   = true
+}
+variable "db_password" {
+  type        = string
+  description = "The password for the msSQL server"
+  sensitive   = true
 }
