@@ -26,18 +26,23 @@ variable "psql_password" {
 }
 variable "psql_sku" {
   type        = string
-  default     = "B_Gen4_1"
+  default     = "B_Standard_B1ms"
   description = "The sku for the PSQL server"
 }
 variable "psql_ver" {
   type        = string
-  default     = "11"
+  default     = "12"
   description = "The version for the PSQL server"
 }
 variable "psql_store_mb" {
   type        = string
-  default     = "5120"
+  default     = "32768"
   description = "The storage in mb for the PSQL server"
+}
+variable "psql_store_tier" {
+  type        = string
+  default     = "P4"
+  description = "The storage tier for the PSQL server"
 }
 variable "psql_backup_ret" {
   type        = string

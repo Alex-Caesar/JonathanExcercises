@@ -45,7 +45,7 @@ resource "azurerm_private_endpoint" "ex2_psql_private_end" {
 
   private_service_connection {
     name                           = "${var.rg_name}_sql_private_serv_conn"
-    private_connection_resource_id = azurerm_postgresql_server.ex2_psql_serv.id
+    private_connection_resource_id = azurerm_postgresql_flexible_server.ex2_psql_serv.id
     subresource_names              = ["postgresqlServer"]
     is_manual_connection           = false
   }
@@ -58,30 +58,32 @@ resource "azurerm_private_endpoint" "ex2_psql_private_end" {
 
 
 # __________________________  Postgres  ______________________________________________________
-resource "azurerm_postgresql_server" "ex2_psql_serv" {
+resource "azurerm_postgresql_flexible_server" "ex2_psql_serv" {
   name                = "${var.rg_name}-psql-server-${random_integer.number.result}"
   resource_group_name = azurerm_resource_group.ex2.name
   location            = azurerm_resource_group.ex2.location
 
-  sku_name              = var.psql_sku
-  version               = var.psql_ver
-  storage_mb            = var.psql_store_mb
-  backup_retention_days = var.psql_backup_ret
+  version             = var.psql_ver
+  delegated_subnet_id = azurerm_subnet.example.id
+  private_dns_zone_id = azurerm_private_dns_zone.example.id
 
-  ssl_enforcement_enabled       = false
-  public_network_access_enabled = false
+  administrator_login    = var.psql_admin
+  administrator_password = var.psql_password
+  zone                   = "1"
 
-  administrator_login          = var.psql_admin
-  administrator_login_password = var.psql_password
+  storage_mb   = var.psql_store_mb
+  storage_tier = var.psql_store_tier
+
+  sku_name   = var.psql_sku
+  depends_on = [azurerm_private_dns_zone_virtual_network_link.example]
 }
-resource "azurerm_postgresql_database" "ex2_psql-db" {
-  name                = "${var.rg_name}-psql-db-${random_integer.number.result}"
-  resource_group_name = azurerm_resource_group.ex2.name
-  server_name         = azurerm_postgresql_server.ex2_psql_serv.name
+resource "azurerm_postgresql_flexible_server_database" "ex2_psql_db" {
+  name      = "${var.rg_name}-psql-db-${random_integer.number.result}"
+  server_id = azurerm_postgresql_flexible_server.ex2_psql_serv.id
+  collation = "en_US.utf8"
+  charset   = "utf8"
 
-  charset   = "UTF8"
-  collation = "English_United States.1252"
-
+  # prevent the possibility of accidental data loss
   lifecycle {
     prevent_destroy = false #false for sake of testing
   }
