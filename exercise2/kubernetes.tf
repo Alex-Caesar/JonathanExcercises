@@ -1,7 +1,6 @@
 # ***************************  AKS related resources ************************************
 
 # __________________________  Kubernetes ________________________________________
-
 resource "azurerm_kubernetes_cluster" "ex2_aks" {
   name                = "${var.rg_name}-aks-${random_integer.number.result}"
   resource_group_name = azurerm_resource_group.ex2.name
@@ -23,7 +22,6 @@ resource "azurerm_kubernetes_cluster" "ex2_aks" {
   identity {
     type = "SystemAssigned"
   }
-
 }
 
 # __________________________  Container Registry ________________________________________
@@ -35,5 +33,4 @@ resource "azurerm_container_registry" "ex2_acr" {
   sku                           = "Basic"
   public_network_access_enabled = false
   admin_enabled                 = false
-
 }

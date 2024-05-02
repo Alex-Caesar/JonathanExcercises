@@ -135,13 +135,10 @@ resource "azurerm_application_gateway" "ex2_app_gw" {
     backend_address_pool_name  = local.backend_address_pool_name
     backend_http_settings_name = local.http_setting_name
   }
-
-
   identity {
     type         = "UserAssigned"
     identity_ids = [azurerm_user_assigned_identity.ex2_app_gw_ass_iden.id]
   }
-
   #ensuring the cert is ready to be utilized
   depends_on = [azurerm_key_vault.ex2_akv, azurerm_user_assigned_identity.ex2_app_gw_ass_iden, azurerm_key_vault_certificate.ex2_cert_appgw]
 }
