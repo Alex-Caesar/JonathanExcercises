@@ -17,7 +17,7 @@ resource "azurerm_subnet" "ex2_subnet_pe" {
         "Microsoft.Network/virtualNetworks/subnets/join/action",
       ]
     }
-}
+  }
 }
 
 # NSG Rules
@@ -75,7 +75,7 @@ resource "azurerm_postgresql_flexible_server" "ex2_psql_serv" {
   storage_tier = var.psql_store_tier
 
   sku_name   = var.psql_sku
-  depends_on = [azurerm_private_dns_zone_virtual_network_link.example]
+  depends_on = [azurerm_private_dns_zone_virtual_network_link.ex2_priv_dns_z_net_link_psql]
 }
 resource "azurerm_postgresql_flexible_server_database" "ex2_psql_db" {
   name      = "${var.rg_name}-psql-db-${random_integer.number.result}"

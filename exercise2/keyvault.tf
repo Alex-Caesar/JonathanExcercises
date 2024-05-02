@@ -27,11 +27,11 @@ resource "azurerm_role_assignment" "app_gw_kv_role_secret" {
 
 # __________________________  Secrets and Certs _______________________________________________
 resource "azurerm_key_vault_secret" "ex2_akv_db_pass" {
-  name         = var.psql_admin
-  value        = azurerm_postgresql_server.ex2_psql_serv.administrator_login_password
+  name         = azurerm_postgresql_flexible_server.ex2_psql_serv.administrator_login
+  value        = azurerm_postgresql_flexible_server.ex2_psql_serv.administrator_password
   key_vault_id = azurerm_key_vault.ex2_akv.id
   # to ensure the connection secret string is created after the value is generated
-  depends_on = [azurerm_postgresql_server.ex2_psql_serv]
+  depends_on = [azurerm_postgresql_flexible_server.ex2_psql_serv]
 }
 resource "azurerm_key_vault_certificate" "ex2_cert_appgw" {
   name         = "${var.rg_name}-cert-appgw"
