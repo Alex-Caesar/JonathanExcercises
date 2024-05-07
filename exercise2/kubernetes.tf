@@ -24,13 +24,20 @@ resource "azurerm_kubernetes_cluster" "ex2_aks" {
   }
 }
 
-# # __________________________  Container Registry ________________________________________
-# resource "azurerm_container_registry" "ex2_acr" {
-#   name                = "${var.rg_name}-acr-${random_integer.number.result}"
-#   resource_group_name = azurerm_resource_group.ex2.name
-#   location            = azurerm_resource_group.ex2.location
+# __________________________  Container Registry ________________________________________
+resource "azurerm_container_registry" "ex2_acr" {
+  name                = "${var.rg_name}-acr-${random_integer.number.result}"
+  resource_group_name = azurerm_resource_group.ex2.name
+  location            = azurerm_resource_group.ex2.location
 
-#   sku                           = "Basic"
-#   public_network_access_enabled = false
-#   admin_enabled                 = false
-# }
+  sku                           = "Basic"
+  public_network_access_enabled = false
+  admin_enabled                 = false
+}
+
+resource "azurerm_role_assignment" "ex2_acr_role" {
+  principal_id                     = azurerm_kubernetes_cluster.ex2_aks.kubelet_identity[0].object_id
+  role_definition_name             = "AcrPull"
+  scope                            = azurerm_container_registry.ex2_acr.id
+  skip_service_principal_aad_check = true
+}
