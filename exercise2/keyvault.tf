@@ -1,13 +1,13 @@
 # ***************************  Keyvault related resources ************************************
 resource "azurerm_key_vault" "ex2_akv" {
-  name                          = "${var.rg_name}-akv-${random_integer.number.result}"
-  resource_group_name           = azurerm_resource_group.ex2.name
-  location                      = azurerm_resource_group.ex2.location
-  sku_name                      = "standard"
-  tenant_id                     = data.azurerm_client_config.current.tenant_id
-  public_network_access_enabled = false
-  enable_rbac_authorization     = true
-  enabled_for_deployment        = true
+  name                = "${var.rg_name}-akv-${random_integer.number.result}"
+  resource_group_name = azurerm_resource_group.ex2.name
+  location            = azurerm_resource_group.ex2.location
+  sku_name            = "standard"
+  tenant_id           = data.azurerm_client_config.current.tenant_id
+  # public_network_access_enabled = false
+  enable_rbac_authorization = true
+  enabled_for_deployment    = true
 }
 
 # __________________________  Permissions _______________________________________________
@@ -18,6 +18,7 @@ resource "azurerm_role_assignment" "app_gw_kv_role_cert" {
   role_definition_name = "Key Vault Certificate User"
   principal_id         = azurerm_user_assigned_identity.ex2_app_gw_ass_iden.principal_id
 }
+
 resource "azurerm_role_assignment" "app_gw_kv_role_secret" {
   scope                = azurerm_key_vault.ex2_akv.id
   role_definition_name = "Key Vault Secrets User"

@@ -2,4 +2,9 @@ Plan of action:
 k8s with no ingress and manual installation
 k8s with container registry
 k8s with auto installation
+
+postgres connectivity
+redis connectivity
+gitlab enterprise configuration
+
 k8s with ingress and cert
