@@ -18,11 +18,22 @@ resource "azurerm_role_assignment" "app_gw_kv_role_cert" {
   role_definition_name = "Key Vault Certificate User"
   principal_id         = azurerm_user_assigned_identity.ex2_app_gw_ass_iden.principal_id
 }
-
 resource "azurerm_role_assignment" "app_gw_kv_role_secret" {
   scope                = azurerm_key_vault.ex2_akv.id
   role_definition_name = "Key Vault Secrets User"
   principal_id         = azurerm_user_assigned_identity.ex2_app_gw_ass_iden.principal_id
+}
+
+# Client
+resource "azurerm_role_assignment" "client_role_certs" {
+  scope                = azurerm_key_vault.ex2_akv.id
+  role_definition_name = "Key Vault Certificates Officer"
+  principal_id         = data.azurerm_client_config.current.object_id
+}
+resource "azurerm_role_assignment" "client_role_secrets" {
+  scope                = azurerm_key_vault.ex2_akv.id
+  role_definition_name = "Key Vault Secrets Officer"
+  principal_id         = data.azurerm_client_config.current.object_id
 }
 
 # __________________________  Secrets and Certs _______________________________________________
