@@ -24,7 +24,7 @@ data "azurerm_client_config" "current" {}
 
 resource "random_integer" "number" {
   min = 1
-  max = 500
+  max = 12
 }
 
 locals {

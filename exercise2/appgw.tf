@@ -40,20 +40,34 @@ resource "azurerm_network_security_rule" "https_rule_app_gw" {
   network_security_group_name = azurerm_network_security_group.ex2_app_gw_netsecg.name
 }
 
-# # Inbound Infrastructure Ports
-# resource "azurerm_network_security_rule" "lb_hp_inbound" {
-#   name                        = "AllowLbHealthProbe"
-#   priority                    = 200
-#   direction                   = "Inbound"
-#   access                      = "Allow"
-#   protocol                    = "*"
-#   source_port_range           = "*"
-#   destination_port_range      = "*"
-#   source_address_prefixes     = ["AzureLoadBalancer", "GatewayManager"]
-#   destination_address_prefix  = azurerm_subnet.ex2_subnet_pe.id
-#   resource_group_name         = azurerm_resource_group.ex2.name
-#   network_security_group_name = azurerm_network_security_group.ex2_app_gw_netsecg.name
-# }
+# Inbound Infrastructure Ports
+resource "azurerm_network_security_rule" "lb_hp_inbound" {
+  name                        = "AllowLbHealthProbe"
+  priority                    = 200
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "*"
+  source_port_range           = "*"
+  destination_port_range      = "*"
+  source_address_prefix       = "AzureLoadBalancer"
+  destination_address_prefix  = "*"
+  resource_group_name         = azurerm_resource_group.ex2.name
+  network_security_group_name = azurerm_network_security_group.ex2_app_gw_netsecg.name
+}
+
+resource "azurerm_network_security_rule" "gw_hp_inbound" {
+  name                        = "AllowGwHealthProbe"
+  priority                    = 300
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "*"
+  source_port_range           = "*"
+  destination_port_range      = "*"
+  source_address_prefix       = "GatewayManager"
+  destination_address_prefix  = "*"
+  resource_group_name         = azurerm_resource_group.ex2.name
+  network_security_group_name = azurerm_network_security_group.ex2_app_gw_netsecg.name
+}
 
 # Outbound rule
 resource "azurerm_network_security_rule" "outbound_internet" {

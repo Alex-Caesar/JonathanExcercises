@@ -8,3 +8,7 @@ redis connectivity
 gitlab enterprise configuration
 
 k8s with ingress and cert
+
+helm repo add gitlab https://charts.gitlab.io/
+helm repo update
+helm upgrade --install gitlab gitlab/gitlab --timeout 600s --set global.hosts.domain=exercise2.alex.com --set global.hosts.externalIP=137.117.16.229 --set certmanager-issuer.email=alexjcaesar@yahoo.com --set postgresql.image.tag=16.2

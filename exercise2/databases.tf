@@ -72,7 +72,6 @@ resource "azurerm_private_endpoint" "ex2_psql_private_end" {
   }
 }
 
-
 # __________________________  Postgres  ______________________________________________________
 #  https://docs.gitlab.com/charts/advanced/external-db/index.html
 resource "azurerm_postgresql_flexible_server" "ex2_psql_serv" {

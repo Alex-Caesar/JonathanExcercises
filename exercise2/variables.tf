@@ -31,7 +31,7 @@ variable "psql_sku" {
 }
 variable "psql_ver" {
   type        = string
-  default     = "12"
+  default     = "16"
   description = "The version for the PSQL server"
 }
 variable "psql_store_mb" {
