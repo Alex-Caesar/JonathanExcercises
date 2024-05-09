@@ -8,13 +8,13 @@ resource "azurerm_virtual_network" "ex2_aks_vnet" {
   name                = "aks-vnet"
   location            = azurerm_resource_group.ex2.location
   resource_group_name = azurerm_resource_group.ex2.name
-  address_space       = ["10.0.0.0/16"]
+  address_space       = ["10.254.0.0/16"]
 }
 resource "azurerm_subnet" "aks" {
   name                 = "aks-subnet"
   resource_group_name  = azurerm_resource_group.ex2.name
-  virtual_network_name = azurerm_resource_group.ex2.location
-  address_prefixes     = ["10.0.1.0/24"]
+  virtual_network_name = azurerm_virtual_network.ex2_aks_vnet.name
+  address_prefixes     = ["10.254.1.0/24"]
 }
 
 # AKS
@@ -49,21 +49,21 @@ resource "azurerm_kubernetes_cluster" "ex2_aks" {
   }
 }
 
-# __________________________  Container Registry ________________________________________
-resource "azurerm_container_registry" "ex2_acr" {
-  name                = "${var.rg_name}acr${random_integer.number.result}"
-  resource_group_name = azurerm_resource_group.ex2.name
-  location            = azurerm_resource_group.ex2.location
+# # __________________________  Container Registry ________________________________________
+# resource "azurerm_container_registry" "ex2_acr" {
+#   name                = "${var.rg_name}acr${random_integer.number.result}"
+#   resource_group_name = azurerm_resource_group.ex2.name
+#   location            = azurerm_resource_group.ex2.location
 
-  sku = "Basic"
-  # public_network_access_enabled = false
-  admin_enabled = false
-}
-resource "azurerm_role_assignment" "ex2_acr_role" {
-  principal_id                     = azurerm_kubernetes_cluster.ex2_aks.kubelet_identity[0].object_id
-  role_definition_name             = "AcrPull"
-  scope                            = azurerm_container_registry.ex2_acr.id
-  skip_service_principal_aad_check = true
-}
-# tf https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_registry_task
-# need cache rule https://learn.microsoft.com/en-us/azure/container-registry/tutorial-artifact-cache
+#   sku = "Basic"
+#   # public_network_access_enabled = false
+#   admin_enabled = false
+# }
+# resource "azurerm_role_assignment" "ex2_acr_role" {
+#   principal_id                     = azurerm_kubernetes_cluster.ex2_aks.kubelet_identity[0].object_id
+#   role_definition_name             = "AcrPull"
+#   scope                            = azurerm_container_registry.ex2_acr.id
+#   skip_service_principal_aad_check = true
+# }
+# # tf https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_registry_task
+# # need cache rule https://learn.microsoft.com/en-us/azure/container-registry/tutorial-artifact-cache

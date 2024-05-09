@@ -3,7 +3,7 @@ resource "azurerm_subnet" "ex2_subnet_app_gw" {
   name                 = "${var.rg_name}_subnet_app_gw"
   resource_group_name  = azurerm_resource_group.ex2.name
   virtual_network_name = azurerm_virtual_network.ex2_vnet.name
-  address_prefixes     = ["10.0.3.0/24"]
+  address_prefixes     = ["10.0.10.0/24"]
 }
 
 resource "azurerm_user_assigned_identity" "ex2_app_gw_ass_iden" {
@@ -62,7 +62,7 @@ resource "azurerm_network_security_rule" "gw_hp_inbound" {
   access                      = "Allow"
   protocol                    = "*"
   source_port_range           = "*"
-  destination_port_range      = "*"
+  destination_port_range      = "65200-65535"
   source_address_prefix       = "GatewayManager"
   destination_address_prefix  = "*"
   resource_group_name         = azurerm_resource_group.ex2.name
