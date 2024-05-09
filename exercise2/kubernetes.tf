@@ -6,16 +6,20 @@ resource "azurerm_kubernetes_cluster" "ex2_aks" {
   resource_group_name = azurerm_resource_group.ex2.name
   location            = azurerm_resource_group.ex2.location
   dns_prefix          = var.aks_dns_prefix
-  sku_tier = "Free"
+  sku_tier            = "Standard"
 
   default_node_pool {
     name                        = var.aks_default_np_name
     node_count                  = var.aks_default_np_count
     vm_size                     = var.aks_default_np_size
-    temporary_name_for_rotation = "tempaksnodepool"
+    temporary_name_for_rotation = "tempaksnp"
   }
 
-  node_resource_group = azurerm_resource_group.ex2.name
+  network_profile {
+    network_plugin = "azure"
+  }
+
+  node_resource_group = "${azurerm_resource_group.ex2.name}_rg"
 
   ingress_application_gateway {
     gateway_id = azurerm_application_gateway.ex2_app_gw.id
@@ -42,3 +46,5 @@ resource "azurerm_role_assignment" "ex2_acr_role" {
   scope                            = azurerm_container_registry.ex2_acr.id
   skip_service_principal_aad_check = true
 }
+
+# need cache rule https://learn.microsoft.com/en-us/azure/container-registry/tutorial-artifact-cache

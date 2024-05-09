@@ -7,7 +7,7 @@ variable "rg_name" {
 }
 variable "rg_location" {
   type        = string
-  default     = "westus"
+  default     = "eastus"
   description = "The location of the resource group and subsequent assets or resources."
   sensitive   = false
 }
@@ -63,7 +63,7 @@ variable "aks_default_np_name" {
 }
 variable "aks_default_np_count" {
   type        = string
-  default     = "1"
+  default     = "2"
   description = "The default node pool count for the AKS"
 }
 variable "aks_default_np_size" {
