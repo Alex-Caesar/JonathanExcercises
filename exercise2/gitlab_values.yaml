@@ -2,3 +2,4 @@ global:
   hosts: 
     domain:'exercise2.alex.com'
     externalIP:
+# TODO

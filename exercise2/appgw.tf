@@ -159,3 +159,17 @@ resource "azurerm_application_gateway" "ex2_app_gw" {
 
 # tf https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network_peering
 # need to do vnet peering https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network_peering
+
+resource "azurerm_virtual_network_peering" "ex2_appgw_aks_vnet_peer" {
+  name                      = "ex2_appgw_aks_vnet_peer"
+  resource_group_name       = azurerm_resource_group.ex2.name
+  virtual_network_name      = azurerm_virtual_network.ex2_vnet.name
+  remote_virtual_network_id = azurerm_virtual_network.ex2_aks_vnet.id
+}
+
+resource "azurerm_virtual_network_peering" "ex2_aks_appgw_vnet_peer" {
+  name                      = "ex2_aks_appgw_vnet_peer"
+  resource_group_name       = azurerm_resource_group.ex2.name
+  virtual_network_name      = azurerm_virtual_network.ex2_aks_vnet.name
+  remote_virtual_network_id = azurerm_virtual_network.ex2_vnet.id
+}
