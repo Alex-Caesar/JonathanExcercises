@@ -157,4 +157,5 @@ resource "azurerm_application_gateway" "ex2_app_gw" {
   depends_on = [azurerm_key_vault.ex2_akv, azurerm_user_assigned_identity.ex2_app_gw_ass_iden, azurerm_key_vault_certificate.ex2_cert_appgw]
 }
 
+# tf https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network_peering
 # need to do vnet peering https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network_peering

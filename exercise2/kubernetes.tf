@@ -46,5 +46,5 @@ resource "azurerm_role_assignment" "ex2_acr_role" {
   scope                            = azurerm_container_registry.ex2_acr.id
   skip_service_principal_aad_check = true
 }
-
+# tf https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_registry_task
 # need cache rule https://learn.microsoft.com/en-us/azure/container-registry/tutorial-artifact-cache
