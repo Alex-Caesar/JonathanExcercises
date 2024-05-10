@@ -6,5 +6,5 @@ global:
     host: psql.example.com 
     username: psqladmin
     password:
-      secret: testing
+      secret: psql_pword
       key: password
