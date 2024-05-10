@@ -46,7 +46,7 @@ resource "azurerm_redis_cache" "ex2_redis" {
   location                      = azurerm_resource_group.ex2.location
   capacity                      = 1
   family                        = "C"
-  sku_name                      = "Basic"
+  sku_name                      = "Premuim"
   public_network_access_enabled = false
 }
 
