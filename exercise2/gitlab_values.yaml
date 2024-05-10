@@ -1,5 +1,10 @@
+postgresql:
+  install: false
+
 global:
-  hosts: 
-    domain:'exercise2.alex.com'
-    externalIP:
-# TODO
+  psql:
+    host: psql.example.com 
+    username: psqladmin
+    password:
+      secret: testing
+      key: password
