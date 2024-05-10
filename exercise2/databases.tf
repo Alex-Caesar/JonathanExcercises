@@ -152,3 +152,9 @@ resource "azurerm_postgresql_flexible_server_database" "ex2_psql_db" {
     prevent_destroy = false #false for sake of testing
   }
 }
+# https://docs.gitlab.com/ee/install/postgresql_extensions.html#:~:text=to%20gitlabhq_production)%3A-,Extension,-Minimum%20GitLab%20version
+resource "azurerm_postgresql_flexible_server_configuration" "ex2_psql_db_ext" {
+  name      = "azure.extensions"
+  server_id = azurerm_postgresql_flexible_server.ex2_psql_serv.id
+  value     = "PG_TRGM,PLPGSQL,BTREE_GIST"
+}
