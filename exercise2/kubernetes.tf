@@ -49,65 +49,65 @@ resource "azurerm_kubernetes_cluster" "ex2_aks" {
   }
 }
 
-# # __________________________  Container Registry ________________________________________
-# # Private Endpointand networking
+# __________________________  Container Registry ________________________________________
+# Private Endpointand networking
 
-# resource "azurerm_subnet" "ex2_subnet_acr" {
-#   name                 = "${var.rg_name}_subnet_acr"
-#   resource_group_name  = azurerm_resource_group.ex2.name
-#   virtual_network_name = azurerm_virtual_network.ex2_vnet.name
-#   address_prefixes     = ["10.0.20.0/24"]
-# }
+resource "azurerm_subnet" "ex2_subnet_acr" {
+  name                 = "${var.rg_name}_subnet_acr"
+  resource_group_name  = azurerm_resource_group.ex2.name
+  virtual_network_name = azurerm_virtual_network.ex2_vnet.name
+  address_prefixes     = ["10.0.20.0/24"]
+}
 
-# resource "azurerm_private_dns_zone" "ex2_priv_dns_zone_acr" {
-#   name                = "privatelink.azurecr.io${var.rg_location}.data.privatelink.azurecr.io"
-#   resource_group_name = azurerm_resource_group.ex2.name
-# }
-# resource "azurerm_private_dns_zone_virtual_network_link" "ex2_priv_dns_z_net_link_acr" {
-#   name                  = "${var.rg_name}_priv_dns_z_net_link_acr"
-#   resource_group_name   = azurerm_resource_group.ex2.name
-#   private_dns_zone_name = azurerm_private_dns_zone.ex2_priv_dns_zone_acr.name
-#   virtual_network_id    = azurerm_virtual_network.ex2_vnet.id
-# }
+resource "azurerm_private_dns_zone" "ex2_priv_dns_zone_acr" {
+  name                = "privatelink.azurecr.io${var.rg_location}.data.privatelink.azurecr.io"
+  resource_group_name = azurerm_resource_group.ex2.name
+}
+resource "azurerm_private_dns_zone_virtual_network_link" "ex2_priv_dns_z_net_link_acr" {
+  name                  = "${var.rg_name}_priv_dns_z_net_link_acr"
+  resource_group_name   = azurerm_resource_group.ex2.name
+  private_dns_zone_name = azurerm_private_dns_zone.ex2_priv_dns_zone_acr.name
+  virtual_network_id    = azurerm_virtual_network.ex2_vnet.id
+}
 
-# resource "azurerm_private_endpoint" "ex2_acr_private_end" {
-#   name                = "${var.rg_name}_acr_private_end"
-#   resource_group_name = azurerm_resource_group.ex2.name
-#   location            = azurerm_resource_group.ex2.location
+resource "azurerm_private_endpoint" "ex2_acr_private_end" {
+  name                = "${var.rg_name}_acr_private_end"
+  resource_group_name = azurerm_resource_group.ex2.name
+  location            = azurerm_resource_group.ex2.location
 
-#   subnet_id = azurerm_subnet.ex2_subnet_acr.id
+  subnet_id = azurerm_subnet.ex2_subnet_acr.id
 
-#   private_service_connection {
-#     name                           = "${var.rg_name}_acr_private_serv_conn"
-#     private_connection_resource_id = azurerm_container_registry.ex2_acr.id
-#     subresource_names              = ["registry"]
-#     is_manual_connection           = false
-#   }
+  private_service_connection {
+    name                           = "${var.rg_name}_acr_private_serv_conn"
+    private_connection_resource_id = azurerm_container_registry.ex2_acr.id
+    subresource_names              = ["registry"]
+    is_manual_connection           = false
+  }
 
-#   private_dns_zone_group {
-#     name                 = "${var.rg_name}_private_dns_zg_acr"
-#     private_dns_zone_ids = [azurerm_private_dns_zone.ex2_priv_dns_zone_acr.id]
-#   }
-# }
+  private_dns_zone_group {
+    name                 = "${var.rg_name}_private_dns_zg_acr"
+    private_dns_zone_ids = [azurerm_private_dns_zone.ex2_priv_dns_zone_acr.id]
+  }
+}
 
-# # ACR
-# resource "azurerm_container_registry" "ex2_acr" {
-#   name                = "${var.rg_name}acr${random_integer.number.result}"
-#   resource_group_name = azurerm_resource_group.ex2.name
-#   location            = azurerm_resource_group.ex2.location
+# ACR
+resource "azurerm_container_registry" "ex2_acr" {
+  name                = "${var.rg_name}acr${random_integer.number.result}"
+  resource_group_name = azurerm_resource_group.ex2.name
+  location            = azurerm_resource_group.ex2.location
 
-#   sku = "Basic"
-#   public_network_access_enabled = false
-#   admin_enabled = false
-# }
-# resource "azurerm_role_assignment" "ex2_acr_role" {
-#   principal_id                     = azurerm_kubernetes_cluster.ex2_aks.kubelet_identity[0].object_id
-#   role_definition_name             = "AcrPull"
-#   scope                            = azurerm_container_registry.ex2_acr.id
-#   skip_service_principal_aad_check = true
+  sku                           = "Basic"
+  public_network_access_enabled = false
+  admin_enabled                 = false
+}
+resource "azurerm_role_assignment" "ex2_acr_role" {
+  principal_id                     = azurerm_kubernetes_cluster.ex2_aks.kubelet_identity[0].object_id
+  role_definition_name             = "AcrPull"
+  scope                            = azurerm_container_registry.ex2_acr.id
+  skip_service_principal_aad_check = true
 
-#   depends_on = [ azurerm_kubernetes_cluster.ex2_aks ]
-# }
+  depends_on = [azurerm_kubernetes_cluster.ex2_aks]
+}
 # # tf https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_registry_task
 # # need cache rule https://learn.microsoft.com/en-us/azure/container-registry/tutorial-artifact-cache
 # resource "azurerm_container_registry_task" "ex2_acr_task" {
