@@ -21,7 +21,7 @@ variable "psql_admin" {
 }
 variable "psql_password" {
   type        = string
-  description = "The password for the PSQL server"
+  description = "The password for the PSQL server. Note: you must create a k8s secret on the cluster with the name psql-pword with a key of password."
   sensitive   = true
 }
 variable "psql_sku" {
@@ -75,4 +75,10 @@ variable "aks_ingress_name" {
   type        = string
   default     = "aksingress"
   description = "The name ingress application gateway for the AKS"
+}
+
+variable "gitlab_password" {
+  type        = string
+  description = "The password for the GitLab server. Note: you must create a k8s secret on the cluster with the name gitlab-pword with a key of password."
+  sensitive   = true
 }

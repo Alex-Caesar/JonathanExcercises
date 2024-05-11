@@ -22,3 +22,9 @@ global:
     password:
       secret: psql-pword
       key: password
+  
+gitlab:
+  migrations:
+    initialRootPassword:
+      secret: gitlab-pword
+      key: password

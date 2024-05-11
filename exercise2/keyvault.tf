@@ -45,7 +45,11 @@ resource "azurerm_key_vault_secret" "ex2_akv_db_pass" {
   # to ensure the connection secret string is created after the value is generated
   depends_on = [azurerm_postgresql_flexible_server.ex2_psql_serv]
 }
-# TODO redis password
+resource "azurerm_key_vault_secret" "ex2_gitlab_pass" {
+  name         = "gitlab-root"
+  value        = var.gitlab_password
+  key_vault_id = azurerm_key_vault.ex2_akv.id
+}
 resource "azurerm_key_vault_certificate" "ex2_cert_appgw" {
   name         = "${var.rg_name}-cert-appgw"
   key_vault_id = azurerm_key_vault.ex2_akv.id
