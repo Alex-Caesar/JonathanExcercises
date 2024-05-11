@@ -9,7 +9,7 @@ global:
   hosts:
     domain: exercise2.alex.com
     externalIP: nil
-    https: ture
+    https: true
   edition: ee
   ingress:
     configureCertManager: false
@@ -35,3 +35,18 @@ gitlab:
     ingress:
       tls:
         secretName: nil
+
+omniauth:
+  enabled: true
+  autoSignInWithProvider: azure_activedirectory_v2
+  syncProfileFromProvider: ['azure_activedirectory_v2']
+  syncProfileAttributes: ['email']
+  blockAutoCreatedUsers: true
+  autoLinkLdapUser: false
+  autoLinkUser: ['saml']
+  externalProviders: []
+  allowBypassTwoFactor: true
+  allowSingleSignOn: [ 'saml']
+  autoLinkSamlUser: true
+  providers: 
+    - secret: azure_activedirectory_v2
