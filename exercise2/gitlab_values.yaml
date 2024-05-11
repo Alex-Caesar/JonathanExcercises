@@ -9,9 +9,12 @@ global:
   hosts:
     domain: exercise2.alex.com
     externalIP: nil
+    https: ture
   edition: ee
   ingress:
     configureCertManager: false
+    tls:
+      secretName: nil
   redis:
     host: *.redis.cache.windows.net
     auth:
@@ -28,3 +31,7 @@ gitlab:
     initialRootPassword:
       secret: gitlab-pword
       key: password
+  webservice:
+    ingress:
+      tls:
+        secretName: nil
