@@ -36,17 +36,18 @@ gitlab:
       tls:
         secretName: nil
 
-omniauth:
-  enabled: true
-  autoSignInWithProvider: azure_activedirectory_v2
-  syncProfileFromProvider: ['azure_activedirectory_v2']
-  syncProfileAttributes: ['email']
-  blockAutoCreatedUsers: true
-  autoLinkLdapUser: false
-  autoLinkUser: ['saml']
-  externalProviders: []
-  allowBypassTwoFactor: true
-  allowSingleSignOn: [ 'saml']
-  autoLinkSamlUser: true
-  providers: 
-    - secret: azure_activedirectory_v2
+# omniauth:
+#   enabled: true
+#   autoSignInWithProvider: azure_activedirectory_v2
+#   syncProfileFromProvider: ['azure_activedirectory_v2']
+#   syncProfileAttributes: ['email']
+#   blockAutoCreatedUsers: true
+#   autoLinkLdapUser: false
+#   autoLinkUser: ['saml']
+#   externalProviders: []
+#   allowBypassTwoFactor: true
+#   allowSingleSignOn: [ 'saml']
+#   autoLinkSamlUser: true
+#   providers: 
+#     - secret: azure_activedirectory_v2
+# # https://docs.gitlab.com/charts/charts/globals.html#pod:~:text=Once%20created%2C%20the%20providers%20are%20enabled%20by%20providing%20the%20maps%20in%20configuration%2C%20as%20shown%20below%3A
