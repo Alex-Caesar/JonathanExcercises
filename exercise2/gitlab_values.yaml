@@ -1,10 +1,24 @@
 postgresql:
   install: false
+redis:
+  install: false
+certmanager-issuer:
+  email: *
 
 global:
+  hosts:
+    domain: exercise2.alex.com
+    externalIP: *
+  edition: ee
+  ingress:
+    configureCertManager: false
+  redis:
+    host: *.redis.cache.windows.net
+    auth:
+      enabled: false
   psql:
-    host: psql.example.com 
+    host: *.postgres.database.azure.com
     username: psqladmin
     password:
-      secret: psql_pword
+      secret: psql-pword
       key: password

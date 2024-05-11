@@ -96,12 +96,12 @@ resource "azurerm_private_dns_zone" "ex2_priv_dns_zone_psql" {
   name                = "privatelink.postgres.database.azure.com"
   resource_group_name = azurerm_resource_group.ex2.name
 }
-# resource "azurerm_private_dns_zone_virtual_network_link" "ex2_priv_dns_z_net_link_psql" {
-#   name                  = "${var.rg_name}_priv_dns_z_net_link_psql"
-#   resource_group_name   = azurerm_resource_group.ex2.name
-#   private_dns_zone_name = azurerm_private_dns_zone.ex2_priv_dns_zone_psql.name
-#   virtual_network_id    = azurerm_virtual_network.ex2_vnet.id
-# }
+resource "azurerm_private_dns_zone_virtual_network_link" "ex2_priv_dns_z_net_link_psql" {
+  name                  = "${var.rg_name}_priv_dns_z_net_link_psql"
+  resource_group_name   = azurerm_resource_group.ex2.name
+  private_dns_zone_name = azurerm_private_dns_zone.ex2_priv_dns_zone_psql.name
+  virtual_network_id    = azurerm_virtual_network.ex2_vnet.id
+}
 # resource "azurerm_private_endpoint" "ex2_psql_private_end" {
 #   name                = "${var.rg_name}_psql_private_end"
 #   resource_group_name = azurerm_resource_group.ex2.name

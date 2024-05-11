@@ -38,7 +38,7 @@ resource "azurerm_kubernetes_cluster" "ex2_aks" {
     network_plugin = "azure"
   }
 
-  node_resource_group = "${azurerm_resource_group.ex2.name}_rg"
+  node_resource_group = "${azurerm_resource_group.ex2.name}_aks_rg"
 
   ingress_application_gateway {
     gateway_id = azurerm_application_gateway.ex2_app_gw.id
