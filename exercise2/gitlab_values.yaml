@@ -3,12 +3,12 @@ postgresql:
 redis:
   install: false
 certmanager-issuer:
-  email: *
+  email: nil
 
 global:
   hosts:
     domain: exercise2.alex.com
-    externalIP: *
+    externalIP: nil
   edition: ee
   ingress:
     configureCertManager: false
@@ -17,7 +17,7 @@ global:
     auth:
       enabled: false
   psql:
-    host: *.postgres.database.azure.com
+    host: nil.postgres.database.azure.com
     username: psqladmin
     password:
       secret: psql-pword
