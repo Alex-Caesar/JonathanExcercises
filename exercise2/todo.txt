@@ -15,5 +15,3 @@ helm repo update
 helm upgrade --install gitlab gitlab/gitlab --timeout 600s --debug --dry-run --values gitlab_values.yaml
 
 helm upgrade --install gitlab gitlab/gitlab --timeout 600s --values gitlab_values.yaml
-
-helm upgrade --install gitlab gitlab/gitlab --timeout 600s --set global.hosts.domain=exercise2.alex.com --set global.hosts.externalIP=13.83.48.250 --set certmanager-issuer.email=alexjcaesar@yahoo.com --set postgresql.image.tag=16.2
