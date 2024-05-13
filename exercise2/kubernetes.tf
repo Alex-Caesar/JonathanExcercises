@@ -10,7 +10,7 @@ resource "azurerm_virtual_network" "ex2_aks_vnet" {
   resource_group_name = azurerm_resource_group.ex2.name
   address_space       = ["10.254.0.0/16"]
 }
-resource "azurerm_subnet" "aks" {
+resource "azurerm_subnet" "ex2_aks_subnet" {
   name                 = "aks-subnet"
   resource_group_name  = azurerm_resource_group.ex2.name
   virtual_network_name = azurerm_virtual_network.ex2_aks_vnet.name
@@ -29,7 +29,7 @@ resource "azurerm_kubernetes_cluster" "ex2_aks" {
     name           = var.aks_default_np_name
     node_count     = var.aks_default_np_count
     vm_size        = var.aks_default_np_size
-    vnet_subnet_id = azurerm_subnet.aks.id
+    vnet_subnet_id = azurerm_subnet.ex2_aks_subnet.id
 
     temporary_name_for_rotation = "tempaksnp"
   }
@@ -56,7 +56,7 @@ resource "azurerm_subnet" "ex2_subnet_acr" {
   name                 = "${var.rg_name}_subnet_acr"
   resource_group_name  = azurerm_resource_group.ex2.name
   virtual_network_name = azurerm_virtual_network.ex2_vnet.name
-  address_prefixes     = ["10.0.20.0/24"]
+  address_prefixes     = ["10.0.40.0/24"]
 }
 
 resource "azurerm_private_dns_zone" "ex2_priv_dns_zone_acr" {
@@ -96,7 +96,7 @@ resource "azurerm_container_registry" "ex2_acr" {
   resource_group_name = azurerm_resource_group.ex2.name
   location            = azurerm_resource_group.ex2.location
 
-  sku                           = "Basic"
+  sku                           = "Premium"
   public_network_access_enabled = false
   admin_enabled                 = false
 }

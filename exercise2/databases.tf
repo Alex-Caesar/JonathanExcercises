@@ -1,11 +1,28 @@
 # ***************************  Database related resources ************************************
-
-# _____________________________  Redis  ______________________________________________________
 resource "azurerm_subnet" "ex2_subnet_pe" {
   name                 = "${var.rg_name}_subnet_pe"
   resource_group_name  = azurerm_resource_group.ex2.name
   virtual_network_name = azurerm_virtual_network.ex2_vnet.name
   address_prefixes     = ["10.0.20.0/24"]
+}
+
+# _____________________________  Redis  ______________________________________________________
+resource "azurerm_network_security_group" "ex2_nsg_pe_redis" {
+  name                = "ex2_nsg_psql"
+  resource_group_name = azurerm_resource_group.ex2.name
+  location            = azurerm_resource_group.ex2.location
+
+  security_rule {
+    name                       = "test123"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "6379"
+    source_address_prefix      = azurerm_subnet.ex2_aks_subnet.address_prefixes.0
+    destination_address_prefix = azurerm_subnet.ex2_subnet_pe.address_prefixes.0
+  }
 }
 
 resource "azurerm_private_dns_zone" "ex2_priv_dns_zone_redis" {
@@ -53,22 +70,6 @@ resource "azurerm_redis_cache" "ex2_redis" {
 # __________________________  Postgres  ______________________________________________________
 
 # General Networking
-resource "azurerm_subnet" "ex2_subnet_psql" {
-  name                 = "${var.rg_name}-subnet-psql"
-  resource_group_name  = azurerm_resource_group.ex2.name
-  virtual_network_name = azurerm_virtual_network.ex2_vnet.name
-  address_prefixes     = ["10.0.2.0/24"]
-  service_endpoints    = ["Microsoft.Storage"]
-  delegation {
-    name = "fs"
-    service_delegation {
-      name = "Microsoft.DBforPostgreSQL/flexibleServers"
-      actions = [
-        "Microsoft.Network/virtualNetworks/subnets/join/action",
-      ]
-    }
-  }
-}
 resource "azurerm_network_security_group" "ex2_nsg_psql" {
   name                = "ex2_nsg_psql"
   resource_group_name = azurerm_resource_group.ex2.name
@@ -81,13 +82,13 @@ resource "azurerm_network_security_group" "ex2_nsg_psql" {
     access                     = "Allow"
     protocol                   = "Tcp"
     source_port_range          = "*"
-    destination_port_range     = "*"
-    source_address_prefix      = "*"
-    destination_address_prefix = "*"
+    destination_port_range     = "5432"
+    source_address_prefix      = azurerm_subnet.ex2_aks_subnet.address_prefixes.0
+    destination_address_prefix = azurerm_subnet.ex2_subnet_pe.address_prefixes.0
   }
 }
 resource "azurerm_subnet_network_security_group_association" "main" {
-  subnet_id                 = azurerm_subnet.ex2_subnet_psql.id
+  subnet_id                 = azurerm_subnet.ex2_subnet_pe.id
   network_security_group_id = azurerm_network_security_group.ex2_nsg_psql.id
 }
 
@@ -102,25 +103,25 @@ resource "azurerm_private_dns_zone_virtual_network_link" "ex2_priv_dns_z_net_lin
   private_dns_zone_name = azurerm_private_dns_zone.ex2_priv_dns_zone_psql.name
   virtual_network_id    = azurerm_virtual_network.ex2_vnet.id
 }
-# resource "azurerm_private_endpoint" "ex2_psql_private_end" {
-#   name                = "${var.rg_name}_psql_private_end"
-#   resource_group_name = azurerm_resource_group.ex2.name
-#   location            = azurerm_resource_group.ex2.location
+resource "azurerm_private_endpoint" "ex2_psql_private_end" {
+  name                = "${var.rg_name}_psql_private_end"
+  resource_group_name = azurerm_resource_group.ex2.name
+  location            = azurerm_resource_group.ex2.location
 
-#   subnet_id = azurerm_subnet.ex2_subnet_psql.id
+  subnet_id = azurerm_subnet.ex2_subnet_pe.id
 
-#   private_service_connection {
-#     name                           = "${var.rg_name}_psql_private_serv_conn"
-#     private_connection_resource_id = azurerm_postgresql_flexible_server.ex2_psql_serv.id
-#     subresource_names              = ["postgresqlServer"]
-#     is_manual_connection           = false
-#   }
+  private_service_connection {
+    name                           = "${var.rg_name}_psql_private_serv_conn"
+    private_connection_resource_id = azurerm_postgresql_flexible_server.ex2_psql_serv.id
+    subresource_names              = ["postgresqlServer"]
+    is_manual_connection           = false
+  }
 
-#   private_dns_zone_group {
-#     name                 = "${var.rg_name}_private_dns_zg_psql"
-#     private_dns_zone_ids = [azurerm_private_dns_zone.ex2_priv_dns_zone_psql.id]
-#   }
-# }
+  private_dns_zone_group {
+    name                 = "${var.rg_name}_private_dns_zg_psql"
+    private_dns_zone_ids = [azurerm_private_dns_zone.ex2_priv_dns_zone_psql.id]
+  }
+}
 
 #  https://docs.gitlab.com/charts/advanced/external-db/index.html
 resource "azurerm_postgresql_flexible_server" "ex2_psql_serv" {
@@ -128,9 +129,7 @@ resource "azurerm_postgresql_flexible_server" "ex2_psql_serv" {
   resource_group_name = azurerm_resource_group.ex2.name
   location            = azurerm_resource_group.ex2.location
 
-  version             = var.psql_ver
-  delegated_subnet_id = azurerm_subnet.ex2_subnet_psql.id
-  private_dns_zone_id = azurerm_private_dns_zone.ex2_priv_dns_zone_psql.id
+  version = var.psql_ver
 
   administrator_login    = var.psql_admin
   administrator_password = var.psql_password
