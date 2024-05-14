@@ -65,7 +65,7 @@ resource "azurerm_private_endpoint" "ex2_redis_private_end" {
     private_dns_zone_ids = [azurerm_private_dns_zone.ex2_priv_dns_zone_redis.id]
   }
 }
-
+# https://docs.gitlab.com/charts/advanced/external-redis/index.html
 resource "azurerm_redis_cache" "ex2_redis" {
   name                          = "${var.rg_name}-redis"
   resource_group_name           = azurerm_resource_group.ex2.name
