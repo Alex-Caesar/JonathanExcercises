@@ -4,6 +4,9 @@
 # .tfstate files
 *.tfstate
 *.tfstate.*
+# custom
+*.pem
+*.pfx
 
 # Crash log files
 crash.log

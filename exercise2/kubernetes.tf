@@ -111,15 +111,16 @@ resource "azurerm_role_assignment" "ex2_acr_role" {
 # # tf https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_registry_task
 # # need cache rule https://learn.microsoft.com/en-us/azure/container-registry/tutorial-artifact-cache
 # resource "azurerm_container_registry_task" "ex2_acr_task" {
-#   name                  = "${var.rg_name}-acr-task"
+#   name                  = "${var.rg_name}-acr-task-pub-img-gitlabee"
 #   container_registry_id = azurerm_container_registry.ex2_acr.id
 #   platform {
 #     os = "Linux"
 #   }
 #   docker_step {
 #     dockerfile_path      = "Dockerfile"
-#     context_path         = "https://github.com/<username>/<repository>#<branch>:<folder>"
+#     context_path         = "https://gitlab.com/gitlab-org/omnibus-gitlab/-/blob/master/docker/Dockerfile"
 #     context_access_token = "<github personal access token>"
 #     image_names          = ["helloworld:{{.Run.ID}}"]
+#     cache_enabled        = true
 #   }
 # }
