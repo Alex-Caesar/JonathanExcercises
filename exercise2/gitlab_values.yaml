@@ -3,29 +3,39 @@ postgresql:
 redis:
   install: false
 certmanager-issuer:
-  email: nil
+  install: false
+  email: false
 
 global:
   hosts:
     domain: exercise2.alex.com
     externalIP: nil
     https: true
-  edition: ee
+  edition: ce
   ingress:
     configureCertManager: false
     tls:
-      secretName: nil
+      secretName: tls-secret-test-3
+  certificates:
+    customCAs:
+    - secret: tls-secret
+      keys:
+      - tls.key
+      - tls.crt
   redis:
-    host: *.redis.cache.windows.net
+    host: exercise2-redis.redis.cache.windows.net
     auth:
       enabled: false
   psql:
-    host: nil.postgres.database.azure.com
+    host: exercise2-psql-server-<Integer>.postgres.database.azure.com
     username: psqladmin
     password:
+      useSecret: true
       secret: psql-pword
       key: password
-  
+  kas:
+    enabled: false
+
 gitlab:
   migrations:
     initialRootPassword:
@@ -34,8 +44,30 @@ gitlab:
   webservice:
     ingress:
       tls:
-        secretName: nil
+        secretName: tls-secret-test-2
 
+gitlab-pages:
+  hpa:
+    minReplicas: 1
+    maxRelicas: 1
+
+sidekiq:
+  minReplicas: 1
+  maxRelicas: 1
+
+gitaly:
+  persistence:
+    size: 12Gi
+
+minio:
+  replicas: 1
+
+registry:
+  hpa:
+    minReplicas: 1
+    maxRelicas: 1
+
+# Bonus integration
 # omniauth:
 #   enabled: true
 #   autoSignInWithProvider: azure_activedirectory_v2

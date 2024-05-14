@@ -95,5 +95,5 @@ resource "azurerm_key_vault_certificate" "ex2_cert_appgw" {
       validity_in_months = 3
     }
   }
-  # needs to depends on
+  depends_on = [ azurerm_role_assignment.client_role_certs, azurerm_role_assignment.client_role_secrets ]
 }
