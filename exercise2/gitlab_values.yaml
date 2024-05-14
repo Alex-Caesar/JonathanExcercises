@@ -15,7 +15,7 @@ global:
   ingress:
     configureCertManager: false
     tls:
-      secretName: tls-secret-test-3
+      secretName: tls-secret
   certificates:
     customCAs:
     - secret: tls-secret
@@ -44,7 +44,7 @@ gitlab:
   webservice:
     ingress:
       tls:
-        secretName: tls-secret-test-2
+        secretName: tls-secret
 
 gitlab-pages:
   hpa:
@@ -61,11 +61,17 @@ gitaly:
 
 minio:
   replicas: 1
+  ingress:
+    tls:
+      secretName: tls-secret
 
 registry:
   hpa:
     minReplicas: 1
     maxRelicas: 1
+  ingress:
+    tls:
+      secretName: tls-secret
 
 # Bonus integration
 # omniauth:
