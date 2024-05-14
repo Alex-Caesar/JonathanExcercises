@@ -6,23 +6,32 @@ resource "azurerm_subnet" "ex2_subnet_pe" {
   address_prefixes     = ["10.0.20.0/24"]
 }
 
-# _____________________________  Redis  ______________________________________________________
-resource "azurerm_network_security_group" "ex2_nsg_pe_redis" {
-  name                = "ex2_nsg_psql"
+resource "azurerm_network_security_group" "ex2_nsg_pe" {
+  name                = "ex2_nsg_pe"
   resource_group_name = azurerm_resource_group.ex2.name
   location            = azurerm_resource_group.ex2.location
+}
 
-  security_rule {
-    name                       = "gitlab_aks_port_redis"
-    priority                   = 100
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "6379"
-    source_address_prefix      = azurerm_subnet.ex2_aks_subnet.address_prefixes.0
-    destination_address_prefix = azurerm_subnet.ex2_subnet_pe.address_prefixes.0
-  }
+resource "azurerm_subnet_network_security_group_association" "ex2_nsg_ps-asso" {
+  subnet_id                 = azurerm_subnet.ex2_subnet_pe.id
+  network_security_group_id = azurerm_network_security_group.ex2_nsg_pe.id
+}
+
+# _____________________________  Redis  ______________________________________________________
+
+resource "azurerm_network_security_rule" "ex2_nsgr_redis" {
+  name                       = "gitlab_aks_port_redis"
+  priority                   = 100
+  direction                  = "Inbound"
+  access                     = "Allow"
+  protocol                   = "Tcp"
+  source_port_range          = "*"
+  destination_port_range     = "6379"
+  source_address_prefix      = azurerm_subnet.ex2_aks_subnet.address_prefixes.0
+  destination_address_prefix = azurerm_subnet.ex2_subnet_pe.address_prefixes.0
+
+  resource_group_name         = azurerm_resource_group.ex2.name
+  network_security_group_name = azurerm_network_security_group.ex2_nsg_pe.name
 }
 
 resource "azurerm_private_dns_zone" "ex2_priv_dns_zone_redis" {
@@ -70,26 +79,19 @@ resource "azurerm_redis_cache" "ex2_redis" {
 # __________________________  Postgres  ______________________________________________________
 
 # General Networking
-resource "azurerm_network_security_group" "ex2_nsg_psql" {
-  name                = "ex2_nsg_psql"
-  resource_group_name = azurerm_resource_group.ex2.name
-  location            = azurerm_resource_group.ex2.location
+resource "azurerm_network_security_rule" "ex2_nsgr_psql" {
+  name                       = "gitlab_aks_port_psql"
+  priority                   = 200
+  direction                  = "Inbound"
+  access                     = "Allow"
+  protocol                   = "Tcp"
+  source_port_range          = "*"
+  destination_port_range     = "5432"
+  source_address_prefix      = azurerm_subnet.ex2_aks_subnet.address_prefixes.0
+  destination_address_prefix = azurerm_subnet.ex2_subnet_pe.address_prefixes.0
 
-  security_rule {
-    name                       = "gitlab_aks_port_psql"
-    priority                   = 100
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "5432"
-    source_address_prefix      = azurerm_subnet.ex2_aks_subnet.address_prefixes.0
-    destination_address_prefix = azurerm_subnet.ex2_subnet_pe.address_prefixes.0
-  }
-}
-resource "azurerm_subnet_network_security_group_association" "main" {
-  subnet_id                 = azurerm_subnet.ex2_subnet_pe.id
-  network_security_group_id = azurerm_network_security_group.ex2_nsg_psql.id
+  resource_group_name         = azurerm_resource_group.ex2.name
+  network_security_group_name = azurerm_network_security_group.ex2_nsg_pe.name
 }
 
 # Postgres
