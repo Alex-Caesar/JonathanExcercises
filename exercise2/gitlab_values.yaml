@@ -19,9 +19,6 @@ global:
   certificates:
     customCAs:
     - secret: tls-secret
-      keys:
-      - tls.key
-      - tls.crt
   redis:
     host: exercise2-redis.redis.cache.windows.net
     auth:
@@ -42,9 +39,11 @@ gitlab:
       secret: gitlab-pword
       key: password
   webservice:
+    enabled: true
     ingress:
       tls:
         secretName: tls-secret
+        smartcardSecretName: tls-secret
 
 gitlab-pages:
   hpa:
@@ -57,7 +56,7 @@ sidekiq:
 
 gitaly:
   persistence:
-    size: 12Gi
+    size: 16Gi
 
 minio:
   replicas: 1
