@@ -13,7 +13,7 @@ resource "azurerm_network_security_group" "ex2_nsg_pe_redis" {
   location            = azurerm_resource_group.ex2.location
 
   security_rule {
-    name                       = "test123"
+    name                       = "gitlab_aks_port_redis"
     priority                   = 100
     direction                  = "Inbound"
     access                     = "Allow"
@@ -76,7 +76,7 @@ resource "azurerm_network_security_group" "ex2_nsg_psql" {
   location            = azurerm_resource_group.ex2.location
 
   security_rule {
-    name                       = "test123"
+    name                       = "gitlab_aks_port_psql"
     priority                   = 100
     direction                  = "Inbound"
     access                     = "Allow"
