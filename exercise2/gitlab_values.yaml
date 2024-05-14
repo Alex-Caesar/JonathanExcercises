@@ -11,7 +11,7 @@ global:
     domain: exercise2.alex.com
     externalIP: nil
     https: true
-  edition: ce
+  edition: ee
   ingress:
     configureCertManager: false
     tls:
