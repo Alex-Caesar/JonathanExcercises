@@ -58,7 +58,7 @@ resource "azurerm_role_assignment" "client_role_secrets" {
 
 # __________________________  Secrets and Certs _______________________________________________
 resource "azurerm_key_vault_secret" "ex2_akv_db_pass" {
-  name         = azurerm_postgresql_flexible_server.ex2_psql_serv.administrator_login
+  name         = "psql-pword"
   value        = azurerm_postgresql_flexible_server.ex2_psql_serv.administrator_password
   key_vault_id = azurerm_key_vault.ex2_akv.id
   # to ensure the connection secret string is created after the value is generated
@@ -66,13 +66,13 @@ resource "azurerm_key_vault_secret" "ex2_akv_db_pass" {
 }
 
 resource "azurerm_key_vault_secret" "ex2_gitlab_pass" {
-  name         = "gitlab-root"
+  name         = "gitlab-pword"
   value        = var.gitlab_password
   key_vault_id = azurerm_key_vault.ex2_akv.id
 }
 
 resource "azurerm_key_vault_certificate" "ex2_cert_appgw" {
-  name         = "${var.rg_name}-cert-appgw"
+  name         = "tls-secret"
   key_vault_id = azurerm_key_vault.ex2_akv.id
 
   certificate_policy {
