@@ -3,4 +3,4 @@ helm repo update
 
 helm upgrade --install gitlab gitlab/gitlab --timeout 600s --debug --dry-run --values gitlab_values.yaml
 
-helm upgrade --install gitlab gitlab/gitlab --timeout 600s --values gitlab_values.yaml
+helm upgrade --install gitlab gitlab/gitlab --timeout 600s --values gitlab_values.yaml --wait

@@ -1,10 +1,10 @@
 postgresql:
   install: false
-redis:
-  install: false
 certmanager-issuer:
   install: false
   email: false
+nginx-ingress:
+  enabled: false
 
 global:
   hosts:
@@ -13,18 +13,15 @@ global:
     https: true
   edition: ee
   ingress:
+    class: azure/application-gateway
     configureCertManager: false
     tls:
       secretName: tls-secret
   certificates:
     customCAs:
     - secret: tls-secret
-  redis:
-    host: exercise2-redis.redis.cache.windows.net
-    auth:
-      enabled: false
   psql:
-    host: exercise2-psql-server-<Integer>.postgres.database.azure.com
+    host: exercise2-psql-server-<INT>.postgres.database.azure.com
     username: psqladmin
     password:
       useSecret: true
@@ -40,10 +37,10 @@ gitlab:
       key: password
   webservice:
     enabled: true
-    ingress:
-      tls:
-        secretName: tls-secret
-        smartcardSecretName: tls-secret
+    # ingress:
+#   tls:
+#     secretName: tls-secret
+#     smartcardSecretName: tls-secret
 
 gitlab-pages:
   hpa:
@@ -56,21 +53,21 @@ sidekiq:
 
 gitaly:
   persistence:
-    size: 16Gi
+    size: 4Gi
 
 minio:
   replicas: 1
-  ingress:
-    tls:
-      secretName: tls-secret
+  # ingress:
+#   tls:
+#     secretName: tls-secret
 
 registry:
   hpa:
     minReplicas: 1
     maxRelicas: 1
-  ingress:
-    tls:
-      secretName: tls-secret
+  # ingress:
+#   tls:
+#     secretName: tls-secret
 
 # Bonus integration
 # omniauth:

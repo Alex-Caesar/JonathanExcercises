@@ -17,6 +17,8 @@ resource "azurerm_subnet" "ex2_aks_subnet" {
   address_prefixes     = ["10.254.1.0/24"]
 }
 
+# Need NSG and rules ?
+
 # AKS
 resource "azurerm_kubernetes_cluster" "ex2_aks" {
   name                = "${var.rg_name}-aks-${random_integer.number.result}"
@@ -44,14 +46,23 @@ resource "azurerm_kubernetes_cluster" "ex2_aks" {
     gateway_id = azurerm_application_gateway.ex2_app_gw.id
   }
 
+  key_management_service {
+    key_vault_key_id = azurerm_key_vault.ex2_akv.id
+  }
+
+  key_vault_secrets_provider {
+    secret_rotation_enabled = true
+  }
+
   identity {
     type = "SystemAssigned"
   }
+
+  depends_on = [azurerm_key_vault.ex2_akv, azurerm_key_vault_certificate.ex2_cert_appgw, azurerm_application_gateway.ex2_app_gw]
 }
 
 # __________________________  Container Registry ________________________________________
-# Private Endpointand networking
-
+# Private Endpoint and networking
 resource "azurerm_subnet" "ex2_subnet_acr" {
   name                 = "${var.rg_name}_subnet_acr"
   resource_group_name  = azurerm_resource_group.ex2.name

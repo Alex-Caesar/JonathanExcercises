@@ -17,65 +17,6 @@ resource "azurerm_subnet_network_security_group_association" "ex2_nsg_ps-asso" {
   network_security_group_id = azurerm_network_security_group.ex2_nsg_pe.id
 }
 
-# _____________________________  Redis  ______________________________________________________
-
-resource "azurerm_network_security_rule" "ex2_nsgr_redis" {
-  name                       = "gitlab_aks_port_redis"
-  priority                   = 100
-  direction                  = "Inbound"
-  access                     = "Allow"
-  protocol                   = "Tcp"
-  source_port_range          = "*"
-  destination_port_range     = "6379"
-  source_address_prefix      = azurerm_subnet.ex2_aks_subnet.address_prefixes.0
-  destination_address_prefix = azurerm_subnet.ex2_subnet_pe.address_prefixes.0
-
-  resource_group_name         = azurerm_resource_group.ex2.name
-  network_security_group_name = azurerm_network_security_group.ex2_nsg_pe.name
-}
-
-resource "azurerm_private_dns_zone" "ex2_priv_dns_zone_redis" {
-  name                = "privatelink.redis.cache.windows.net"
-  resource_group_name = azurerm_resource_group.ex2.name
-}
-
-resource "azurerm_private_dns_zone_virtual_network_link" "ex2_priv_dns_z_net_link_redis" {
-  name                  = "${var.rg_name}_priv_dns_z_net_link_redis"
-  resource_group_name   = azurerm_resource_group.ex2.name
-  private_dns_zone_name = azurerm_private_dns_zone.ex2_priv_dns_zone_redis.name
-  virtual_network_id    = azurerm_virtual_network.ex2_vnet.id
-}
-
-resource "azurerm_private_endpoint" "ex2_redis_private_end" {
-  name                = "${var.rg_name}_redis_private_end"
-  resource_group_name = azurerm_resource_group.ex2.name
-  location            = azurerm_resource_group.ex2.location
-
-  subnet_id = azurerm_subnet.ex2_subnet_pe.id
-
-  private_service_connection {
-    name                           = "${var.rg_name}_redis_private_serv_conn"
-    private_connection_resource_id = azurerm_redis_cache.ex2_redis.id
-    subresource_names              = ["redisCache"]
-    is_manual_connection           = false
-  }
-
-  private_dns_zone_group {
-    name                 = "${var.rg_name}_private_dns_zg_redis"
-    private_dns_zone_ids = [azurerm_private_dns_zone.ex2_priv_dns_zone_redis.id]
-  }
-}
-# https://docs.gitlab.com/charts/advanced/external-redis/index.html
-resource "azurerm_redis_cache" "ex2_redis" {
-  name                          = "${var.rg_name}-redis"
-  resource_group_name           = azurerm_resource_group.ex2.name
-  location                      = azurerm_resource_group.ex2.location
-  capacity                      = 1
-  family                        = "P"
-  sku_name                      = "Premium"
-  public_network_access_enabled = false
-}
-
 # __________________________  Postgres  ______________________________________________________
 
 # General Networking
@@ -132,6 +73,7 @@ resource "azurerm_postgresql_flexible_server" "ex2_psql_serv" {
   location            = azurerm_resource_group.ex2.location
 
   version = var.psql_ver
+  zone    = "1"
 
   administrator_login    = var.psql_admin
   administrator_password = var.psql_password
@@ -147,6 +89,7 @@ resource "azurerm_postgresql_flexible_server_database" "ex2_psql_db" {
   server_id = azurerm_postgresql_flexible_server.ex2_psql_serv.id
   collation = "en_US.utf8"
   charset   = "utf8"
+
 
   # prevent the possibility of accidental data loss
   lifecycle {

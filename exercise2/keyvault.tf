@@ -10,6 +10,8 @@ resource "azurerm_key_vault" "ex2_akv" {
   enabled_for_deployment    = true
 }
 
+# add firewall for my ip
+
 # __________________________  Permissions _______________________________________________
 
 #  Application Gateway
@@ -23,6 +25,23 @@ resource "azurerm_role_assignment" "app_gw_kv_role_secret" {
   scope                = azurerm_key_vault.ex2_akv.id
   role_definition_name = "Key Vault Secrets User"
   principal_id         = azurerm_user_assigned_identity.ex2_app_gw_ass_iden.principal_id
+}
+
+#  AKS integration 
+resource "azurerm_role_assignment" "aks_role_cert" {
+  scope                = azurerm_key_vault.ex2_akv.id
+  role_definition_name = "Key Vault Certificate User"
+  principal_id         = azurerm_kubernetes_cluster.ex2_aks.key_vault_secrets_provider[0].secret_identity[0].object_id
+
+  depends_on = [azurerm_kubernetes_cluster.ex2_aks]
+}
+
+resource "azurerm_role_assignment" "aks_role_secret" {
+  scope                = azurerm_key_vault.ex2_akv.id
+  role_definition_name = "Key Vault Secrets User"
+  principal_id         = azurerm_kubernetes_cluster.ex2_aks.key_vault_secrets_provider[0].secret_identity[0].object_id
+
+  depends_on = [azurerm_kubernetes_cluster.ex2_aks]
 }
 
 # Client
@@ -45,11 +64,13 @@ resource "azurerm_key_vault_secret" "ex2_akv_db_pass" {
   # to ensure the connection secret string is created after the value is generated
   depends_on = [azurerm_postgresql_flexible_server.ex2_psql_serv]
 }
+
 resource "azurerm_key_vault_secret" "ex2_gitlab_pass" {
   name         = "gitlab-root"
   value        = var.gitlab_password
   key_vault_id = azurerm_key_vault.ex2_akv.id
 }
+
 resource "azurerm_key_vault_certificate" "ex2_cert_appgw" {
   name         = "${var.rg_name}-cert-appgw"
   key_vault_id = azurerm_key_vault.ex2_akv.id
@@ -95,5 +116,5 @@ resource "azurerm_key_vault_certificate" "ex2_cert_appgw" {
       validity_in_months = 3
     }
   }
-  depends_on = [azurerm_role_assignment.client_role_certs, azurerm_role_assignment.client_role_secrets, azurerm_role_assignment.app_gw_kv_role_cert, azurerm_role_assignment.app_gw_kv_role_secret ]
+  depends_on = [azurerm_role_assignment.client_role_certs, azurerm_role_assignment.client_role_secrets, azurerm_role_assignment.app_gw_kv_role_cert, azurerm_role_assignment.app_gw_kv_role_secret]
 }
