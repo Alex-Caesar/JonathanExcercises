@@ -1,4 +1,4 @@
 certmanager
 firewall for akv
 replace nginx with app gateway https://docs.gitlab.com/charts/advanced/external-nginx/
-integrate keyvault provider to fetch passwords for k8s secrets
+integrate keyvault provider to fetch passwords for k8s secrets https://learn.microsoft.com/en-us/azure/aks/csi-secrets-store-identity-access#validate-key-vault-secrets
