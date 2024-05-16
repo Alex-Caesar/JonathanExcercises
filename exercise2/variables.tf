@@ -63,7 +63,7 @@ variable "aks_default_np_name" {
 }
 variable "aks_default_np_count" {
   type        = string
-  default     = "2"
+  default     = "3"
   description = "The default node pool count for the AKS"
 }
 variable "aks_default_np_size" {
