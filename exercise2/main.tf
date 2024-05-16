@@ -24,7 +24,7 @@ data "azurerm_client_config" "current" {}
 
 resource "random_integer" "number" {
   min = 1
-  max = 12
+  max = 10
 }
 
 resource "random_string" "string" {
@@ -32,6 +32,7 @@ resource "random_string" "string" {
   special = false
   upper   = false
   lower   = true
+  numeric = false
 }
 
 locals {
@@ -51,7 +52,7 @@ locals {
 
 #______________________________ Base resources ____________________________________________________________
 resource "azurerm_resource_group" "ex2" {
-  name     = var.rg_name
+  name     = "${var.rg_name}-${local.number}-${local.string}"
   location = var.rg_location
 }
 
