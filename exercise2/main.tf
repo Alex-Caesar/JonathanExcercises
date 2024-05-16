@@ -27,6 +27,13 @@ resource "random_integer" "number" {
   max = 12
 }
 
+resource "random_string" "string" {
+  length  = 4
+  special = false
+  upper   = false
+  lower   = true
+}
+
 locals {
   backend_address_pool_name      = "${azurerm_virtual_network.ex2_vnet.name}-beap"
   frontend_port_name             = "${azurerm_virtual_network.ex2_vnet.name}-feport"
@@ -38,6 +45,8 @@ locals {
   cert_tls_ssl                   = "${var.rg_name}-app-gw-cert"
   vm_nic_ip_name                 = "${var.rg_name}-nic-vm-ip"
   host_name                      = "exercise2.alex.com"
+  number                         = random_integer.number.result
+  string                         = random_string.string.result
 }
 
 #______________________________ Base resources ____________________________________________________________

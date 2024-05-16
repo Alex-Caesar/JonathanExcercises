@@ -8,8 +8,8 @@ nginx-ingress:
 
 global:
   hosts:
-    domain: exercise2.alex.com
-    externalIP: nil
+    domain: exercise.com
+    externalIP:
     https: true
   edition: ee
   ingress:
@@ -21,7 +21,7 @@ global:
     customCAs:
     - secret: tls-secret
   psql:
-    host: exercise2-psql-server-<INT>.postgres.database.azure.com
+    host:
     username: psqladmin
     password:
       useSecret: true

@@ -1,6 +1,6 @@
 # ***************************  Keyvault related resources ************************************
 resource "azurerm_key_vault" "ex2_akv" {
-  name                = "${var.rg_name}-akv-${random_integer.number.result}"
+  name                = "${var.rg_name}-akv-${local.number}-${local.string}"
   resource_group_name = azurerm_resource_group.ex2.name
   location            = azurerm_resource_group.ex2.location
   sku_name            = "standard"
@@ -58,17 +58,20 @@ resource "azurerm_role_assignment" "client_role_secrets" {
 
 # __________________________  Secrets and Certs _______________________________________________
 resource "azurerm_key_vault_secret" "ex2_akv_db_pass" {
-  name         = "psql-pword"
-  value        = azurerm_postgresql_flexible_server.ex2_psql_serv.administrator_password
+  name  = "psql-pword"
+  value = azurerm_postgresql_flexible_server.ex2_psql_serv.administrator_password
+
   key_vault_id = azurerm_key_vault.ex2_akv.id
-  # to ensure the connection secret string is created after the value is generated
-  depends_on = [azurerm_postgresql_flexible_server.ex2_psql_serv]
+
+  depends_on = [azurerm_postgresql_flexible_server.ex2_psql_serv, azurerm_role_assignment.client_role_certs, azurerm_role_assignment.client_role_secrets]
 }
 
 resource "azurerm_key_vault_secret" "ex2_gitlab_pass" {
   name         = "gitlab-pword"
   value        = var.gitlab_password
   key_vault_id = azurerm_key_vault.ex2_akv.id
+
+  depends_on = [azurerm_role_assignment.client_role_certs, azurerm_role_assignment.client_role_secrets]
 }
 
 resource "azurerm_key_vault_certificate" "ex2_cert_appgw" {

@@ -68,7 +68,7 @@ resource "azurerm_private_endpoint" "ex2_psql_private_end" {
 
 #  https://docs.gitlab.com/charts/advanced/external-db/index.html
 resource "azurerm_postgresql_flexible_server" "ex2_psql_serv" {
-  name                = "${var.rg_name}-psql-server-${random_integer.number.result}"
+  name                = "${var.rg_name}-psql-server-${local.number}-${local.string}"
   resource_group_name = azurerm_resource_group.ex2.name
   location            = azurerm_resource_group.ex2.location
 
