@@ -8,6 +8,8 @@
 # custom
 *.pem
 *.pfx
+*.tgz
+gitlab-7.11.2
 
 # Crash log files
 crash.log

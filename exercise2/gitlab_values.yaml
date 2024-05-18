@@ -4,16 +4,15 @@ certmanager-issuer:
   install: false
   email: false
 nginx-ingress:
-  enabled: false
+  enabled: true
 
 global:
   hosts:
     domain: exercise.com
-    externalIP:
+    externalIP: 13.90.17.112
     https: true
   edition: ee
   ingress:
-    class: azure/application-gateway
     configureCertManager: false
     tls:
       secretName: tls-secret
