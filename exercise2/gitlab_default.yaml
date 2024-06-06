@@ -1,0 +1,27 @@
+postgresql:
+  install: false
+
+global:
+  edition: ce
+  hosts:
+    domain: guillotinetech.com
+    externalIP: 10.10.10.10
+  psql:
+    host: exercise2-psql-4-nr.postgres.database.azure.com
+    username: psqladmin
+    password:
+      key: password
+      secret: psql-pword
+
+certmanager-issuer:
+  email: alexjcaesar@yahoo.com
+
+gitlab:
+  migrations:
+    initialRootPassword:
+      key: password
+      secret: gitlab-pword
+    psql:
+      password:
+        key: password
+        secret: psql-pword

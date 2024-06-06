@@ -10,7 +10,7 @@
 *.pfx
 *.tgz
 gitlab-7.11.2
-
+test*.yaml
 # Crash log files
 crash.log
 crash.*.log

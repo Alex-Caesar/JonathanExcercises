@@ -28,7 +28,7 @@ resource "random_integer" "number" {
 }
 
 resource "random_string" "string" {
-  length  = 4
+  length  = 2
   special = false
   upper   = false
   lower   = true
@@ -45,7 +45,7 @@ locals {
   redirect_configuration_name    = "${azurerm_virtual_network.ex2_vnet.name}-rdrcfg"
   cert_tls_ssl                   = "${var.rg_name}-app-gw-cert"
   vm_nic_ip_name                 = "${var.rg_name}-nic-vm-ip"
-  host_name                      = "exercise2.alex.com"
+  host_name                      = "guillotinetech.com"
   number                         = random_integer.number.result
   string                         = random_string.string.result
 }

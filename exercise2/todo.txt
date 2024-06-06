@@ -1,7 +1,3 @@
-certmanager
-node pools
 firewall for akv
 replace nginx with app gateway https://docs.gitlab.com/charts/advanced/external-nginx/
-reader and network contributor on appgw managed identity in cluster rg
-
-integrate keyvault provider to fetch passwords for k8s secrets https://learn.microsoft.com/en-us/azure/aks/csi-secrets-store-identity-access#validate-key-vault-secrets
+external ip nginx

@@ -6,34 +6,7 @@ resource "azurerm_subnet" "ex2_subnet_pe" {
   address_prefixes     = ["10.0.20.0/24"]
 }
 
-resource "azurerm_network_security_group" "ex2_nsg_pe" {
-  name                = "ex2_nsg_pe"
-  resource_group_name = azurerm_resource_group.ex2.name
-  location            = azurerm_resource_group.ex2.location
-}
-
-resource "azurerm_subnet_network_security_group_association" "ex2_nsg_ps-asso" {
-  subnet_id                 = azurerm_subnet.ex2_subnet_pe.id
-  network_security_group_id = azurerm_network_security_group.ex2_nsg_pe.id
-}
-
 # __________________________  Postgres  ______________________________________________________
-
-# General Networking
-resource "azurerm_network_security_rule" "ex2_nsgr_psql" {
-  name                       = "gitlab_aks_port_psql"
-  priority                   = 200
-  direction                  = "Inbound"
-  access                     = "Allow"
-  protocol                   = "Tcp"
-  source_port_range          = "*"
-  destination_port_range     = "5432"
-  source_address_prefix      = azurerm_subnet.ex2_aks_subnet.address_prefixes.0
-  destination_address_prefix = azurerm_subnet.ex2_subnet_pe.address_prefixes.0
-
-  resource_group_name         = azurerm_resource_group.ex2.name
-  network_security_group_name = azurerm_network_security_group.ex2_nsg_pe.name
-}
 
 # Postgres
 resource "azurerm_private_dns_zone" "ex2_priv_dns_zone_psql" {
@@ -68,7 +41,7 @@ resource "azurerm_private_endpoint" "ex2_psql_private_end" {
 
 #  https://docs.gitlab.com/charts/advanced/external-db/index.html
 resource "azurerm_postgresql_flexible_server" "ex2_psql_serv" {
-  name                = "${var.rg_name}-psql-${local.number}"
+  name                = "${var.rg_name}-psql-${local.number}-${local.string}"
   resource_group_name = azurerm_resource_group.ex2.name
   location            = azurerm_resource_group.ex2.location
 
@@ -82,7 +55,6 @@ resource "azurerm_postgresql_flexible_server" "ex2_psql_serv" {
   storage_tier = var.psql_store_tier
 
   sku_name = var.psql_sku
-
 }
 resource "azurerm_postgresql_flexible_server_database" "ex2_psql_db" {
   name      = "gitlabhq_production"
@@ -101,4 +73,6 @@ resource "azurerm_postgresql_flexible_server_configuration" "ex2_psql_db_ext" {
   name      = "azure.extensions"
   server_id = azurerm_postgresql_flexible_server.ex2_psql_serv.id
   value     = "PG_TRGM,PLPGSQL,BTREE_GIST"
+
+  depends_on = [azurerm_postgresql_flexible_server_database.ex2_psql_db, azurerm_private_endpoint.ex2_psql_private_end]
 }

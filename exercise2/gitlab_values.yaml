@@ -8,79 +8,93 @@ nginx-ingress:
 
 global:
   hosts:
-    domain: exercise.com
-    externalIP: 13.90.17.112
+    domain: guillotinetech.com
+    externalIP: 10.10.10.10
     https: true
-  edition: ee
+  edition: ce
   ingress:
     configureCertManager: false
     tls:
       secretName: tls-secret
   certificates:
     customCAs:
-    - secret: tls-secret
+    - secret: tls-ca
   psql:
-    host:
+    host: ****
     username: psqladmin
     password:
       useSecret: true
       secret: psql-pword
       key: password
+  redis:
+    auth:
+      secret: redis-pword
+      key: password
   kas:
     enabled: false
+
+redis:
+  auth:
+    existingSecret: redis-pword
+    existingSecretKey: password
 
 gitlab:
   migrations:
     initialRootPassword:
       secret: gitlab-pword
       key: password
+  gitaly:
+    persistence:
+      size: 8Gi
+  toolbox:
+    backups:
+      cron:
+        persistence:
+          size: 8Gi
   webservice:
     enabled: true
-    # ingress:
-#   tls:
-#     secretName: tls-secret
-#     smartcardSecretName: tls-secret
+    ingress:
+      tls:
+        secretName: tls-secret
 
 gitlab-pages:
   hpa:
     minReplicas: 1
     maxRelicas: 1
 
+webservice:
+  redis:
+    auth:
+      secret: redis-pword
+      key: password
+
 sidekiq:
   minReplicas: 1
-  maxRelicas: 1
+  maxRelicas: 2
+  redis:
+    password:
+      secret: redis-pword
+      key: password
+  psql:
+    port: 5432
+    password:
+      secret: psql-password
+      key: password
 
-gitaly:
-  persistence:
-    size: 4Gi
+
+# https://docs.gitlab.com/runner/install/kubernetes.html#prerequisitesgitlab-runner:
+gitlab-runner:
+  certsSecretName: gitlab-guillotinetech-cert
 
 minio:
   replicas: 1
-  # ingress:
-#   tls:
-#     secretName: tls-secret
+  persistence:
+    size: 8Gi
 
 registry:
   hpa:
     minReplicas: 1
     maxRelicas: 1
-  # ingress:
-#   tls:
-#     secretName: tls-secret
-
-# Bonus integration
-# omniauth:
-#   enabled: true
-#   autoSignInWithProvider: azure_activedirectory_v2
-#   syncProfileFromProvider: ['azure_activedirectory_v2']
-#   syncProfileAttributes: ['email']
-#   blockAutoCreatedUsers: true
-#   autoLinkLdapUser: false
-#   autoLinkUser: ['saml']
-#   externalProviders: []
-#   allowBypassTwoFactor: true
-#   allowSingleSignOn: [ 'saml']
-#   autoLinkSamlUser: true
-#   providers: 
-#     - secret: azure_ad
-# # https://docs.gitlab.com/charts/charts/globals.html#pod:~:text=Once%20created%2C%20the%20providers%20are%20enabled%20by%20providing%20the%20maps%20in%20configuration%2C%20as%20shown%20below%3A
+  ingress:
+    tls:
+      secretName: tls-secret

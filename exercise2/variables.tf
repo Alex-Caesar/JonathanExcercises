@@ -63,12 +63,12 @@ variable "aks_default_np_name" {
 }
 variable "aks_default_np_count" {
   type        = string
-  default     = "3"
+  default     = "2"
   description = "The default node pool count for the AKS"
 }
 variable "aks_default_np_size" {
   type        = string
-  default     = "Standard_D2_V2"
+  default     = "Standard_D4S_V3"
   description = "The default node pool vm size for the AKS"
 }
 variable "aks_ingress_name" {

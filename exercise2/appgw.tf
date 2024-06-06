@@ -157,6 +157,23 @@ resource "azurerm_application_gateway" "ex2_app_gw" {
   depends_on = [azurerm_key_vault.ex2_akv, azurerm_user_assigned_identity.ex2_app_gw_ass_iden, azurerm_key_vault_certificate.ex2_cert_appgw]
 }
 
+# identities for app gw and aks
+resource "azurerm_role_assignment" "ex2_app_gw_reader" {
+  scope                = azurerm_resource_group.ex2.id
+  role_definition_name = "Reader"
+  principal_id         = azurerm_kubernetes_cluster.ex2_aks.ingress_application_gateway[0].ingress_application_gateway_identity[0].object_id
+
+  depends_on = [azurerm_kubernetes_cluster.ex2_aks]
+}
+
+resource "azurerm_role_assignment" "ex2_app_gw_net_con" {
+  scope                = azurerm_resource_group.ex2.id
+  role_definition_name = "Network Contributor"
+  principal_id         = azurerm_kubernetes_cluster.ex2_aks.ingress_application_gateway[0].ingress_application_gateway_identity[0].object_id
+
+  depends_on = [azurerm_kubernetes_cluster.ex2_aks]
+}
+
 # Vnet Peering
 resource "azurerm_virtual_network_peering" "ex2_appgw_aks_vnet_peer" {
   name                      = "ex2_appgw_aks_vnet_peer"

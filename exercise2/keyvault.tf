@@ -28,21 +28,21 @@ resource "azurerm_role_assignment" "app_gw_kv_role_secret" {
 }
 
 #  AKS integration 
-# resource "azurerm_role_assignment" "aks_role_cert" {
-#   scope                = azurerm_key_vault.ex2_akv.id
-#   role_definition_name = "Key Vault Certificate User"
-#   principal_id         = azurerm_kubernetes_cluster.ex2_aks.key_vault_secrets_provider[0].secret_identity[0].object_id
+resource "azurerm_role_assignment" "aks_role_cert" {
+  scope                = azurerm_key_vault.ex2_akv.id
+  role_definition_name = "Key Vault Certificate User"
+  principal_id         = azurerm_kubernetes_cluster.ex2_aks.key_vault_secrets_provider[0].secret_identity[0].object_id
 
-#   depends_on = [azurerm_kubernetes_cluster.ex2_aks]
-# }
+  depends_on = [azurerm_kubernetes_cluster.ex2_aks]
+}
 
-# resource "azurerm_role_assignment" "aks_role_secret" {
-#   scope                = azurerm_key_vault.ex2_akv.id
-#   role_definition_name = "Key Vault Secrets User"
-#   principal_id         = azurerm_kubernetes_cluster.ex2_aks.key_vault_secrets_provider[0].secret_identity[0].object_id
+resource "azurerm_role_assignment" "aks_role_secret" {
+  scope                = azurerm_key_vault.ex2_akv.id
+  role_definition_name = "Key Vault Secrets User"
+  principal_id         = azurerm_kubernetes_cluster.ex2_aks.key_vault_secrets_provider[0].secret_identity[0].object_id
 
-#   depends_on = [azurerm_kubernetes_cluster.ex2_aks]
-# }
+  depends_on = [azurerm_kubernetes_cluster.ex2_aks]
+}
 
 # Client
 resource "azurerm_role_assignment" "client_role_certs" {
